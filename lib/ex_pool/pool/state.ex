@@ -10,12 +10,11 @@ defmodule ExPool.Pool.State do
     size: pos_integer,
     sup: pid,
     workers: [pid],
-    monitors: any,
     queue: any
   }
 
   defstruct [:worker_mod, :size,
-             :sup, :workers, :monitors, :queue]
+             :sup, :workers, :queue]
 
   @default_size 5
 
@@ -52,55 +51,15 @@ defmodule ExPool.Pool.State do
   @doc """
   Add a worker to the workers list.
   """
-  @spec get_worker(State.t) :: State.t
+  @spec put_worker(State.t, pid) :: State.t
   def put_worker(%{workers: workers} = state, worker) do
     %{state | workers: [worker|workers]}
   end
 
   @doc """
-  Add a ref for the given pid to the monitors list.
-  """
-  @spec add_monitor(State.t, pid, reference) :: State.t
-  def add_monitor(%{monitors: monitors} = state, pid, ref) do
-    :ets.insert(monitors, {pid, ref})
-    state
-  end
-
-  @doc """
-  Get a pid for the given ref from the monitors list.
-  """
-  @spec get_pid(State.t, reference) :: {:ok, pid} | :not_found
-  def get_pid(%{monitors: monitors}, ref) do
-    case :ets.match(monitors, {:"$1", ref}) do
-      [[pid]] -> {:ok, pid}
-      []      -> :not_found
-    end
-  end
-
-  @doc """
-  Get a ref for the given pid from the monitors list.
-  """
-  @spec get_pid(State.t, pid) :: {:ok, reference} | :not_found
-  def get_ref(%{monitors: monitors}, pid) do
-    case :ets.lookup(monitors, pid) do
-      [{^pid, ref}] -> {:ok, ref}
-      []            -> :not_found
-    end
-  end
-
-  @doc """
-  Remove a pid (and its ref) from the monitors list.
-  """
-  @spec delete_monitor(State.t, pid) :: State.t
-  def delete_monitor(%{monitors: monitors} = state, pid) do
-    :ets.delete(monitors, pid)
-    state
-  end
-
-  @doc """
   Adds a pair (pid, ref) to the queue.
   """
-  @spec enqueue(State.t, pid, ref) :: State.t
+  @spec enqueue(State.t, pid, reference) :: State.t
   def enqueue(%{queue: queue} = state, pid, ref) do
     %{state | queue: :queue.in({pid, ref}, queue)}
   end
@@ -122,10 +81,9 @@ defmodule ExPool.Pool.State do
 
   defp create_resources(%{worker_mod: worker_mod} = state) do
     {:ok, sup} = PoolSupervisor.start_link(worker_mod)
-    monitors   = :ets.new(:monitors, [:private])
     queue      = :queue.new
 
-    %{state | sup: sup, monitors: monitors, queue: queue, workers: []}
+    %{state | sup: sup, queue: queue, workers: []}
   end
 
   defp prepopulate(%{size: size, sup: sup} = state) do

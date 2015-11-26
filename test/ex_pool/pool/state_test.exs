@@ -23,20 +23,6 @@ defmodule ExPool.Pool.StateTest do
     assert {:ok, {^worker_1, _state}} = State.get_worker(state)
   end
 
-  test "#add_monitor, #get_pid, #get_monitor, #delete_monitor", %{state: state} do
-    state = State.add_monitor(state, :pid_1, :ref_1)
-    state = State.add_monitor(state, :pid_2, :ref_2)
-
-    assert {:ok, :pid_2} = State.get_pid(state, :ref_2)
-    assert {:ok, :ref_1} = State.get_ref(state, :pid_1)
-
-    state = State.delete_monitor(state, :non_existent_pid)
-    state = State.delete_monitor(state, :pid_1)
-
-    assert :not_found = State.get_pid(state, :ref_1)
-    assert :not_found = State.get_ref(state, :pid_1)
-  end
-
   test "#enqueue, #pop_from_queue", %{state: state} do
     assert {:empty, state} = State.pop_from_queue(state)
 
