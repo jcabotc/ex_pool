@@ -1,0 +1,241 @@
+    <!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ExPool – ExPool v0.0.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.11.1">
+    <link rel="stylesheet" href="dist/app-6bc9434c82.css" />
+    <script src="dist/sidebar_items.js"></script>
+  </head>
+  <body data-type="modules">
+
+    <div class="main">
+<button class="sidebar-toggle">
+  <i class="icon-menu"></i>
+</button>
+<section class="sidebar">
+  <button class="sidebar-toggle">
+    <i class="icon-menu"></i>
+  </button>
+
+  
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+        ExPool
+      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.0.1
+      </h2>
+    </div>
+    
+  </a>
+
+  <div class="sidebar-search">
+    <i class="icon-search"></i>
+    <input type="text" class="sidebar-searchInput" placeholder="search" autocomplete="off" />
+  </div>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+    
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+    
+
+    
+
+    
+  </ul>
+
+  <ul id="full-list" class="sidebar-fullList"></ul>
+  <div class="sidebar-noResults"></div>
+</section>
+
+<section class="content">
+  <div id="content" class="content-inner">
+
+
+      <h1>
+        <small class="visible-xs">ExPool v0.0.1</small>
+        ExPool
+        
+        
+      </h1>
+
+      
+        <section id="moduledoc" class="docstring">
+          <p>Api for creating pools and running functions on them.</p>
+<p>Is recommended to always use blocking calls on workers
+(<code class="inline">GenServer.call</code> instead of <code class="inline">GenServer.cast</code>). Otherwise
+the transaction will finish and the worker may be returned
+to the pool before finishing its work.</p>
+<h2>Example:</h2>
+<pre><code class="elixir">defmodule HardWorker do
+  use GenServer
+
+  def start_link(_opts \ []) do
+    GenServer.start_link(__MODULE__, :ok, [])
+  end
+
+  def do_work(pid, seconds \ 2) do
+    GenServer.call(pid, seconds)
+  end
+
+  def handle_call(seconds, _from, state) do
+    :timer.sleep(seconds)
+    {:reply, :ok, state}
+  end
+end
+
+{:ok, pool} = ExPool.start_link(worker_mod: HardWorker)
+
+ExPool.run(pool, &amp;HardWorker.do_work(&amp;1))
+
+ExPool.run pool, fn (worker) -&gt;
+  HardWorker.do_work(worker, 1)
+  HardWorker.do_work(worker, 1)
+end</code></pre>
+
+        </section>
+      
+
+      
+        <section id="summary" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#summary">
+              <i class="icon-link"></i>
+            </a>
+            Summary
+          </h1>
+          
+
+          
+  <div class="summary-functions summary">
+    <h2>
+      <a href="#functions">Functions</a>
+    </h2>
+    <div class="summary-row">
+  <div class="summary-signature">
+    <a href="#run/2">run(pool, func)</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>Runs the function with a worker from the given pool</p>
+</div>
+  
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#start_link/1">start_link(opts \\ [])</a>
+  </div>
+  
+    <div class="summary-synopsis"><p>It starts a new pool with the given configuration</p>
+</div>
+  
+</div>
+
+  </div>
+
+
+          
+
+          
+
+        </section>
+      
+
+      
+
+      
+        <section id="functions" class="details-list">
+          <h1 class="section-heading">
+            <a class="hover-link" href="#functions">
+              <i class="icon-link"></i>
+            </a>
+            Functions
+          </h1>
+          <div class="detail" id="run/2">
+  <div class="detail-header">
+    <a href="#run/2" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">run(pool, func)</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">run(pool :: atom | pid, (... -> any)) :: any</code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>Runs the function with a worker from the given pool.</p>
+<p>The function must receive the worker pid as its only argument.</p>
+
+  </section>
+</div>
+<div class="detail" id="start_link/1">
+  <div class="detail-header">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
+      <i class="icon-link"></i>
+    </a>
+    <span class="signature">start_link(opts \\ [])</span>
+      
+  </div>
+  
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">start_link(opts :: [Keyword]) :: <a href="http://elixir-lang.org/docs/stable/elixir/Supervisor.html#t:on_start/0">Supervisor.on_start</a></code></pre>
+        
+      </div>
+    </div>
+  
+  <section class="docstring">
+    <p>It starts a new pool with the given configuration.</p>
+<h2>Options:</h2>
+<ul>
+<li><p>:worker_mod - (Required) Worker module for the pool.</p>
+</li>
+<li><p>:size - (Optional) Size of the pool (default 5).</p>
+</li>
+<li>:name - (Optional) Name of the pool GenServer.
+</li>
+</ul>
+
+  </section>
+</div>
+
+        </section>
+      
+
+      
+
+      
+        <footer class="footer">
+      <p>
+        <span class="line">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" rel="help" target="_blank">ExDoc</a> (v0.11.1),
+        </span>
+        <span class="line">
+          designed by
+          <a href="https://twitter.com/dignifiedquire" target="_blank" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+          </span>
+      </p>
+    </footer>
+  </div>
+</section>
+</div>
+  <script src="dist/app-c7aad77d7d.js"></script>
+  </body>
+</html>
+
