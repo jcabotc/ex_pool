@@ -29,8 +29,11 @@ defmodule ExPool.Pool do
   end
 
   def handle_cast({:check_in, worker}, _from, state) do
-    new_state = Manager.check_in(state)
+    case Manager.check_in(state, worker) do
+      {:ok, state}                -> nil
+      {:check_out, {from, state}} -> GenServer.reply(from, worker)
+    end
 
-    {:noreply, new_state}
+    {:noreply, state}
   end
 end

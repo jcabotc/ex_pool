@@ -59,19 +59,19 @@ defmodule ExPool.Pool.State do
   @doc """
   Adds a pair (pid, ref) to the queue.
   """
-  @spec enqueue(State.t, pid, reference) :: State.t
-  def enqueue(%{queue: queue} = state, pid, ref) do
-    %{state | queue: :queue.in({pid, ref}, queue)}
+  @spec enqueue(State.t, from :: any) :: State.t
+  def enqueue(%{queue: queue} = state, from) do
+    %{state | queue: :queue.in(from, queue)}
   end
 
   @doc """
   Pops a pair (pid, ref) from the queue.
   """
-  @spec pop_from_queue(State.t) :: {:ok, {pid, reference, State.t}} | {:empty, State.t}
+  @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
   def pop_from_queue(%{queue: queue} = state) do
     case :queue.out(queue) do
-      {{:value, {pid, ref}}, new_queue} -> {:ok, {pid, ref, %{state | queue: new_queue}}}
-      {:empty, _queue}                  -> {:empty, state}
+      {{:value, from}, new_queue} -> {:ok, {from, %{state | queue: new_queue}}}
+      {:empty, _queue}            -> {:empty, state}
     end
   end
 

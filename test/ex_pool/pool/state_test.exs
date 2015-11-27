@@ -26,11 +26,11 @@ defmodule ExPool.Pool.StateTest do
   test "#enqueue, #pop_from_queue", %{state: state} do
     assert {:empty, state} = State.pop_from_queue(state)
 
-    state = State.enqueue(state, :pid_1, :ref_1)
-    state = State.enqueue(state, :pid_2, :ref_2)
+    state = State.enqueue(state, :from_1)
+    state = State.enqueue(state, :from_2)
 
-    assert {:ok, {:pid_1, :ref_1, state}} = State.pop_from_queue(state)
-    assert {:ok, {:pid_2, :ref_2, state}} = State.pop_from_queue(state)
-    assert {:empty, _state}               = State.pop_from_queue(state)
+    assert {:ok, {:from_1, state}} = State.pop_from_queue(state)
+    assert {:ok, {:from_2, state}} = State.pop_from_queue(state)
+    assert {:empty, _state}        = State.pop_from_queue(state)
   end
 end
