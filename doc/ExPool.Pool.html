@@ -67,6 +67,11 @@
       </h1>
 
       
+        <section id="moduledoc" class="docstring">
+          <p>Pool</p>
+
+        </section>
+      
 
       
         <section id="summary" class="details-list">
@@ -88,23 +93,26 @@
     <a href="#check_in/2">check_in(pool, worker)</a>
   </div>
   
+    <div class="summary-synopsis"><p>Check-in a worker into the pool</p>
+</div>
+  
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#check_out/1">check_out(pool)</a>
   </div>
   
+    <div class="summary-synopsis"><p>Check-out a worker from the pool. It blocks until one is available</p>
 </div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#handle_cast/3">handle_cast(arg, from, state)</a>
-  </div>
   
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#start_link/1">start_link(opts \\ [])</a>
   </div>
+  
+    <div class="summary-synopsis"><p>Starts a new pool GenServer</p>
+</div>
   
 </div>
 
@@ -137,8 +145,18 @@
       
   </div>
   
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">check_in(pool :: pid, worker :: pid) :: :ok</code></pre>
+        
+      </div>
+    </div>
+  
   <section class="docstring">
-    
+    <p>Check-in a worker into the pool.</p>
+
   </section>
 </div>
 <div class="detail" id="check_out/1">
@@ -150,21 +168,18 @@
       
   </div>
   
-  <section class="docstring">
-    
-  </section>
-</div>
-<div class="detail" id="handle_cast/3">
-  <div class="detail-header">
-    <a href="#handle_cast/3" class="detail-link" title="Link to this function">
-      <i class="icon-link"></i>
-    </a>
-    <span class="signature">handle_cast(arg, from, state)</span>
-      
-  </div>
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">check_out(pool :: pid) :: worker :: pid</code></pre>
+        
+      </div>
+    </div>
   
   <section class="docstring">
-    
+    <p>Check-out a worker from the pool. It blocks until one is available.</p>
+
   </section>
 </div>
 <div class="detail" id="start_link/1">
@@ -176,8 +191,27 @@
       
   </div>
   
+    <div class="specs">
+      <h4 class="specs-title">Specs</h4>
+      <div class="specs-list">
+        
+          <pre><code class="elixir">start_link(opts :: [Keyword]) :: <a href="http://elixir-lang.org/docs/stable/elixir/Supervisor.html#t:on_start/0">Supervisor.on_start</a></code></pre>
+        
+      </div>
+    </div>
+  
   <section class="docstring">
-    
+    <p>Starts a new pool GenServer.</p>
+<h2>Options:</h2>
+<ul>
+<li><p>:name - (Optional) The name of the pool</p>
+</li>
+<li>The rest of the options will be passed to the internal
+  state as pool configuration (for more information about the
+  available options check ExPool.Pool.State.new/1).
+</li>
+</ul>
+
   </section>
 </div>
 

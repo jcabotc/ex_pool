@@ -253,10 +253,10 @@
     <p>Creates a new pool state with the given configuration.</p>
 <h2>Configuration options</h2>
 <ul>
-<li><p><code class="inline">:worker_mod</code> - The worker module. It has to fit in a supervision
-tree (like a GenServer).</p>
+<li><p><code class="inline">:worker_mod</code> - (Required) The worker module. It has to fit in a
+  supervision tree (like a GenServer).</p>
 </li>
-<li><code class="inline">:size</code> - The size of the pool (default 5).
+<li><code class="inline">:size</code> - (Optional) The size of the pool (default 5).
 </li>
 </ul>
 
