@@ -23,10 +23,10 @@ defmodule ExPool.Pool.State do
 
   ## Configuration options
 
-    * `:worker_mod` - The worker module. It has to fit in a supervision
-      tree (like a GenServer).
+    * `:worker_mod` - (Required) The worker module. It has to fit in a
+    supervision tree (like a GenServer).
 
-    * `:size` - The size of the pool (default #{@default_size}).
+    * `:size` - (Optional) The size of the pool (default #{@default_size}).
 
   """
   @spec new(config :: [Keyword]) :: State.t
