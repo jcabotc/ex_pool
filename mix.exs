@@ -3,6 +3,7 @@ defmodule ExPool.Mixfile do
 
   def project do
     [app: :ex_pool,
+     name: "ExPool",
      version: "0.0.1",
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
@@ -15,6 +16,7 @@ defmodule ExPool.Mixfile do
   end
 
   defp deps do
-    []
+    [{:earmark, "~> 0.1", only: :dev},
+     {:ex_doc, "~> 0.11", only: :dev}]
   end
 end

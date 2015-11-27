@@ -19,7 +19,7 @@ defmodule ExPool.Pool.State do
   @default_size 5
 
   @doc """
-  Creates a new pool state with the given configuration
+  Creates a new pool state with the given configuration.
 
   ## Configuration options
 
@@ -92,7 +92,7 @@ defmodule ExPool.Pool.State do
     %{state | workers: workers}
   end
 
-  def create_worker(sup) do
+  defp create_worker(sup) do
     {:ok, worker} = PoolSupervisor.start_child(sup)
     worker
   end

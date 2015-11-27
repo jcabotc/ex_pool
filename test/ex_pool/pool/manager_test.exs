@@ -14,11 +14,11 @@ defmodule ExPool.Pool.ManagerTest do
   end
 
   test "#check_in and #check_out", %{state: state} do
-    assert {:ok, {worker_1, state}} = Manager.check_out(state, :from_1)
-    assert {:ok, {worker_2, state}} = Manager.check_out(state, :from_2)
-    assert {:waiting, state}        = Manager.check_out(state, :from_3)
+    assert {:ok, {worker_1, state}} = Manager.check_out(state, :request_1)
+    assert {:ok, {worker_2, state}} = Manager.check_out(state, :request_2)
+    assert {:waiting, state}        = Manager.check_out(state, :request_3)
 
-    assert {:check_out, {:from_3, state}} = Manager.check_in(state, worker_2)
-    assert {:ok, _state}                  = Manager.check_in(state, worker_1)
+    assert {:check_out, {:request_3, ^worker_2, state}} = Manager.check_in(state, worker_2)
+    assert {:ok, _state}                                = Manager.check_in(state, worker_1)
   end
 end
