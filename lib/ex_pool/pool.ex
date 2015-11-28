@@ -1,6 +1,23 @@
 defmodule ExPool.Pool do
   @moduledoc """
-  Pool
+  Pool GenServer.
+
+  It provides an interface to start a pool, check in and check out workers.
+
+  ```elixir
+  alias ExPool.Pool
+
+  # Starts a new pool
+  {:ok, pool} = Pool.start_link(config)
+
+  # Blocks until there is a worker available
+  worker = Pool.check_out(pool)
+
+  # do some work with the worker
+
+  # Returns the worker to the pool
+  :ok = Pool.check_in(pool, worker)
+  ```
   """
 
   alias ExPool.Pool.Manager
@@ -27,7 +44,9 @@ defmodule ExPool.Pool do
   end
 
   @doc """
-  Check-out a worker from the pool. It blocks until one is available.
+  Retrieve a worker from the pool.
+
+  If there aren't any available workers it blocks until one is available.
   """
   @spec check_out(pool :: pid) :: worker :: pid
   def check_out(pool) do
@@ -35,7 +54,7 @@ defmodule ExPool.Pool do
   end
 
   @doc """
-  Check-in a worker into the pool.
+  Returns a worker into the pool to be used by other processes.
   """
   @spec check_in(pool :: pid, worker :: pid) :: :ok
   def check_in(pool, worker) do

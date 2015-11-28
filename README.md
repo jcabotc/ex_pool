@@ -6,11 +6,11 @@ A generic pooling library for Elixir.
 
 ## Installation
 
-Add ex_pool to your list of dependencies in `mix.exs`:
+Add ExPool to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_pool, "~> 0.0.2"}]
+  [{:ex_pool, "~> 0.0.3"}]
 end
 ```
 
@@ -138,7 +138,7 @@ First we add ExPool and ExRedis as dependencies of the application in our `mix.e
 
 ```elixir
   defp deps do
-    [{:ex_pool, "~> 0.0.2"},
+    [{:ex_pool, "~> 0.0.3"},
      {:exredis, ">= 0.2.2"}]
   end
 ```

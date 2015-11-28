@@ -1,7 +1,7 @@
 defmodule ExPool.Mixfile do
   use Mix.Project
 
-  @version "0.0.2"
+  @version "0.0.3"
 
   def project do
     [app: :ex_pool,
@@ -9,7 +9,7 @@ defmodule ExPool.Mixfile do
      name: "ExPool",
      description: "A generic pooling library for Elixir",
      source_url: "https://github.com/jcabotc/ex_pool",
-     package: package
+     package: package,
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -28,8 +28,6 @@ defmodule ExPool.Mixfile do
 
   def package do
     [mantainers: "Jaime Cabot",
-     links: %{
-       :GitHub => "https://github.com/jcabotc/ex_pool"
-     }]
+     links: %{:GitHub => "https://github.com/jcabotc/ex_pool"}]
   end
 end

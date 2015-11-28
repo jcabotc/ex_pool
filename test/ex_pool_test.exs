@@ -28,13 +28,11 @@ defmodule ExPoolTest do
     {:ok, %{pool: pool}}
   end
 
+  @work_times [60, 20, 20, 5, 15, 5]
+
   test "#run", %{pool: pool} do
-    assert {:work_done, 100} = ExPool.run(pool, &TestWorker.do_work(&1, 100))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
-    assert {:work_done, 5}   = ExPool.run(pool, &TestWorker.do_work(&1, 5))
+    for time <- @work_times do
+      assert {:work_done, ^time} = ExPool.run(pool, &TestWorker.do_work(&1, time))
+    end
   end
 end

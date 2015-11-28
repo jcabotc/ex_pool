@@ -29,10 +29,7 @@ defmodule ExPool do
 
   {:ok, pool} = ExPool.start_link(worker_mod: HardWorker)
 
-  ExPool.run(pool, &HardWorker.do_work(&1))
-
   ExPool.run pool, fn (worker) ->
-    HardWorker.do_work(worker, 1)
     HardWorker.do_work(worker, 1)
   end
   ```
@@ -41,7 +38,7 @@ defmodule ExPool do
   alias ExPool.Pool
 
   @doc """
-  It starts a new pool with the given configuration.
+  Starts a new pool with the given configuration.
 
   ## Options:
 
@@ -62,14 +59,14 @@ defmodule ExPool do
 
   The function must receive the worker pid as its only argument.
   """
-  @spec run(pool :: (atom | pid), fun) :: any
+  @spec run(pool :: (atom | pid), (pid -> any)) :: any
   def run(pool, func) do
     worker = Pool.check_out(pool)
 
     try do
       func.(worker)
     after
-      worker = Pool.check_in(pool, worker)
+      Pool.check_in(pool, worker)
     end
   end
 end
