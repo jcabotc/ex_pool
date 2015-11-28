@@ -97,6 +97,6 @@ defmodule ExPool.Pool.Manager do
   end
 
   defp handle_worker_down(state, worker) do
-    state |> State.forget(worker) |> State.create_worker
+    state |> State.forget(worker, :worker) |> State.create_worker
   end
 end

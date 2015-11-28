@@ -52,8 +52,9 @@ defmodule ExPool.Pool.State do
   @spec create_worker(State.t) :: State.t
   def create_worker(state) do
     {worker, state} = Workers.create(state)
-    Monitors.watch(state, :worker, worker)
-    state
+    ref             = Process.monitor(worker)
+
+    state |> Monitors.add(worker, :worker, ref)
   end
 
   @doc "Retrieve an available worker."
@@ -75,16 +76,16 @@ defmodule ExPool.Pool.State do
 
   # Monitors
   @doc "Monitors a worker"
-  @spec watch(State.t, tag :: atom, worker :: pid) :: State.t
-  def watch(state, tag, worker), do: Monitors.watch(state, tag, worker)
+  @spec add(State.t, worker :: pid, tag :: atom, reference) :: State.t
+  def add(state, worker, tag, ref), do: Monitors.add(state, worker, tag, ref)
 
   @doc "Gets a worker from its reference"
   @spec pid_from_ref(State.t, reference) :: {:ok, {tag :: atom, pid}} | :not_found
   def pid_from_ref(state, reference), do: Monitors.pid_from_ref(state, reference)
 
   @doc "Demonitors a worker"
-  @spec forget(State.t, worker :: pid) :: State.t
-  def forget(state, worker), do: Monitors.forget(state, worker)
+  @spec forget(State.t, worker :: pid, tag :: atom) :: State.t
+  def forget(state, worker, tag), do: Monitors.forget(state, worker, tag)
 
   # Helpers
   defp start(state) do

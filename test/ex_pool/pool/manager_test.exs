@@ -33,6 +33,6 @@ defmodule ExPool.Pool.ManagerTest do
     assert Process.alive?(worker_2)
     assert {:ok, {worker_3, state}} = Manager.check_out(state, :request_3)
     assert Process.alive?(worker_3)
-    assert {:waiting, _state}       = Manager.check_out(state, :request_4)
+    assert {:waiting, _state} = Manager.check_out(state, :request_4)
   end
 end

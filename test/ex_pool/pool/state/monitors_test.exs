@@ -10,23 +10,20 @@ defmodule ExPool.Pool.State.MonitorsTest do
     {:ok, %{state: state}}
   end
 
-  test "#watch, #pid_from_ref on fail", %{state: state} do
-    {:ok, worker} = Agent.start_link(fn -> :ok end)
-
-    state = Monitors.watch(state, :worker, worker)
-    :ok   = Agent.stop(worker)
-
-    assert_receive {:DOWN, worker_ref, :process, _, _}
-    assert {:ok, {:worker, ^worker}} = Monitors.pid_from_ref(state, worker_ref)
+  def new_pid do
+    {:ok, pid} = Agent.start_link(fn -> :ok end)
+    pid
   end
 
-  test "#watch, #forget with no fail", %{state: state} do
-    {:ok, worker} = Agent.start_link(fn -> :ok end)
+  test "#add, #pid_from_ref, #forget", %{state: state} do
+    worker = new_pid
+    state  = Monitors.add(state, worker, :worker, :ref_1)
+    state  = Monitors.add(state, worker, :client, :ref_2)
 
-    state  = Monitors.watch(state, :worker, worker)
-    _state = Monitors.forget(state, worker)
-    :ok    = Agent.stop(worker)
+    assert {:ok, {:client, ^worker}} = Monitors.pid_from_ref(state, :ref_2)
+    assert {:ok, {:worker, ^worker}} = Monitors.pid_from_ref(state, :ref_1)
 
-    refute_receive {:DOWN, _, :process, _, _}
+    state = Monitors.forget(state, worker, :client)
+    assert :not_found = Monitors.pid_from_ref(state, :ref_2)
   end
 end

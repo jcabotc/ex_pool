@@ -31,13 +31,13 @@ defmodule ExPool.Pool.StateTest do
     assert {:empty, _state}      = State.pop_from_queue(state)
   end
 
-  test "#watch, #pid_from_ref, #forget", %{state: state} do
+  test "#add, #pid_from_ref, #forget", %{state: state} do
     {:ok, {worker, state}} = State.get_worker(state)
 
     Agent.stop(worker)
     assert_receive {:DOWN, ref, :process, _, _}
 
     assert {:ok, {:worker, ^worker}} = State.pid_from_ref(state, ref)
-    State.forget(state, worker)
+    State.forget(state, worker, :worker)
   end
 end
