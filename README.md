@@ -55,7 +55,9 @@ defmodule HardWorker do
 end
 ```
 
-Is recommended to always use blocking calls when using a worker (i.e. GenServer.call/2 instead of GenServer.cast/2). If a non-blocking call is used after it ExPool will return the process to the pool and make it available for other requests even though it may be performing work.
+Is recommended to always use blocking calls when using a worker (i.e. `GenServer.call/2` instead of `GenServer.cast/2`).
+
+If a non-blocking call is used ExPool will return the process to the pool and make it available for other requests even though it may be performing work.
 
 ### The pool
 
@@ -126,13 +128,24 @@ ExPool.run :my_pool, fn (worker) ->
 end
 ```
 
-### Real example
+## Examples
 
-The following example will show how to use ExPool to keep a pool of redis connections on your application.
+### A pool of redis connections
 
-We will use ExRedis to start a redis connection and run commands.
+The following example will show how to use ExPool to keep a pool of redis connections on your application. We will use ExRedis to establish a redis connection and run commands.
 
-First we will add to our `config/config.exs` some configuration about the pool and the redis server.
+First we add ExPool and ExRedis as dependencies of the application in our `mix.exs`.
+
+```elixir
+  defp deps do
+    [{:ex_pool, "~> 0.0.1"},
+     {:exredis, ">= 0.2.2"}]
+  end
+```
+
+Run `mix deps.get` to get the dependencies from Hex.
+
+Add to our `config/config.exs` some configuration about the pool and the redis server.
 
 ```elixir
 config :redis_pool,
@@ -149,9 +162,7 @@ config :ex_redis,
 
 As ExRedis fits into a supervision tree there is no need to explicitly define a worker.
 
-We have configured a pool with 10 redis connections named `:redis`.
-
-To start the pool when the application starts add it as a child of your application supervisor.
+We have configured a pool with 10 redis connections named `:redis`. To start the pool when the application starts add it as a child of your application supervisor.
 
 ```elixir
 defmodule MyApplication do
