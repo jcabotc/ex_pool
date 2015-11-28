@@ -1,11 +1,9 @@
 defmodule ExPool.Mixfile do
   use Mix.Project
 
-  @version "0.0.4"
-
   def project do
     [app: :ex_pool,
-     version: @version,
+     version: "0.0.4",
      name: "ExPool",
      description: "A generic pooling library for Elixir",
      source_url: "https://github.com/jcabotc/ex_pool",
@@ -27,7 +25,8 @@ defmodule ExPool.Mixfile do
   end
 
   def package do
-    [mantainers: "Jaime Cabot",
+    [mantainers: ["Jaime Cabot"],
+     licenses: ["Apache 2"],
      links: %{:GitHub => "https://github.com/jcabotc/ex_pool"}]
   end
 end

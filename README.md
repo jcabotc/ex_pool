@@ -195,3 +195,8 @@ ExPool.run :redis, fn (client) ->
 end
 # => "bar"
 ```
+
+## License
+
+Plug source code is released under Apache 2 License.
+Check LICENSE file for more information.
