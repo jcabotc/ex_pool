@@ -1,6 +1,14 @@
 defmodule ExPool.Pool.State do
   @moduledoc """
   The internal state of a pool.
+
+  It is a struct with the following fields:
+
+    * `:worker_mod` - The worker module.
+    * `:size` - Size of the pool
+    * `:sup` - Pool supervisor
+    * `:workers` - List of available worker processes
+    * `:queue` - Queue to store the waiting requests
   """
 
   alias ExPool.Pool.Supervisor, as: PoolSupervisor
@@ -12,7 +20,6 @@ defmodule ExPool.Pool.State do
     workers: [pid],
     queue: any
   }
-
   defstruct [:worker_mod, :size,
              :sup, :workers, :queue]
 
