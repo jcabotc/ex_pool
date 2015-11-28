@@ -19,10 +19,11 @@ defmodule ExPool.Pool.State do
     size: pos_integer,
     sup: pid,
     workers: [pid],
-    queue: any
+    monitors: :ets.tab,
+    waiting: any
   }
   defstruct [:worker_mod, :size,
-             :sup, :workers, :queue]
+             :sup, :workers, :monitors, :waiting]
 
   @default_size 5
 

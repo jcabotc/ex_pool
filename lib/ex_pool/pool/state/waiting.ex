@@ -8,25 +8,25 @@ defmodule ExPool.Pool.State.Waiting do
   """
   @spec setup(State.t) :: State.t
   def setup(state) do
-    %{state | queue: :queue.new}
+    %{state | waiting: :queue.new}
   end
 
   @doc """
   Adds an item to the queue
   """
   @spec push(State.t, item :: any) :: State.t
-  def push(%{queue: queue} = state, item) do
-    %{state | queue: :queue.in(item, queue)}
+  def push(%{waiting: waiting} = state, item) do
+    %{state | waiting: :queue.in(item, waiting)}
   end
 
   @doc """
   Pops an item from the queue
   """
   @spec pop(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
-  def pop(%{queue: queue} = state) do
-    case :queue.out(queue) do
-      {{:value, item}, new_queue} -> {:ok, {item, %{state | queue: new_queue}}}
-      {:empty, _queue}            -> {:empty, state}
+  def pop(%{waiting: waiting} = state) do
+    case :queue.out(waiting) do
+      {{:value, item}, new_waiting} -> {:ok, {item, %{state | waiting: new_waiting}}}
+      {:empty, _queue}              -> {:empty, state}
     end
   end
 
