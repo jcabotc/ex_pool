@@ -18,7 +18,11 @@ end
 
 ExPool uses a set of initialized processes kept ready to use rather than spawning and destroying them on demand.
 
-When a function is run on the pool ExPool requests a process from the pool, runs the function with the pid as argument and returns the process to the pool.
+When you run a function on the pool:
+
+ 1. It requests a process from the pool.
+ 2. Runs the function with the pid as only argument.
+ 3. Returns the process to the pool.
 
 If there are no processes available it blocks until a process is returned to the pool, and then runs the function.
 
@@ -51,6 +55,8 @@ defmodule HardWorker do
 end
 ```
 
+Is recommended to always use blocking calls when using a worker (i.e. GenServer.call/2 instead of GenServer.cast/2). If a non-blocking call is used after it ExPool will return the process to the pool and make it available for other requests even though it may be performing work.
+
 ### The pool
 
 You can start a pool with `ExPool.start_link/1`.
@@ -76,7 +82,9 @@ If we run concurrently more functions on the pool than workers available the fun
 {:ok, pool} = ExPool.start_link(worker_mod: HardWorker, size: 2)
 
 for _i <- 1..5 do
-  ExPool.run pool, &HardWorker.do_work(&1)
+  spawn_link fn ->
+    ExPool.run pool, &HardWorker.do_work(&1)
+  end
 end
 
 # It will print:
@@ -85,4 +93,94 @@ end
 #   Work done!
 #   Work done!
 #   Work done!
+```
+
+### Using a pool on a supervision tree
+
+To start a pool that will be supervised by your application add to your application supervisor (or any other supervisor of your choice) the following child.
+
+```elixir
+defmodule MyApplication do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(ExPool, [[worker_mod: HardWorker, size: 10, name: :my_pool]])
+
+      # ... more children
+    ]
+
+    opts = [strategy: :one_for_one, name: Transactions.Endpoint.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+The pool will be started with your application and can be used as follows.
+
+```elixir
+ExPool.run :my_pool, fn (worker) ->
+  HardWorker.do_work(worker)
+end
+```
+
+### Real example
+
+The following example will show how to use ExPool to keep a pool of redis connections on your application.
+
+We will use ExRedis to start a redis connection and run commands.
+
+First we will add to our `config/config.exs` some configuration about the pool and the redis server.
+
+```elixir
+config :redis_pool,
+  worker_mod: ExRedis,
+  size: 10,
+  name: :redis
+
+config :ex_redis,
+  host: "127.0.0.1",
+  port: 6379,
+  password: "",
+  db: 0
+```
+
+As ExRedis fits into a supervision tree there is no need to explicitly define a worker.
+
+We have configured a pool with 10 redis connections named `:redis`.
+
+To start the pool when the application starts add it as a child of your application supervisor.
+
+```elixir
+defmodule MyApplication do
+  use Application
+
+  @redis_pool_config Application.get_env(:redis_pool)
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(ExPool, [@redis_pool_config])
+    ]
+
+    opts = [strategy: :one_for_one, name: Transactions.Endpoint.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+
+Now you can run commands on redis from your application.
+
+```elixir
+ExPool.run :redis, fn (client) ->
+  client |> Exredis.query ["SET", "foo", "bar"]
+end
+
+ExPool.run :redis, fn (client) ->
+  client |> Exredis.query ["GET", "foo"]
+end
+# => "bar"
 ```
