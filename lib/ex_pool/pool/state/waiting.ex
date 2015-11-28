@@ -1,4 +1,4 @@
-defmodule ExPool.Pool.State.Queue do
+defmodule ExPool.Pool.State.Waiting do
   @moduledoc """
   Manages the queue of waiting requests of the pool.
   """

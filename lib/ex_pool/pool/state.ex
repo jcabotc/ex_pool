@@ -8,11 +8,11 @@ defmodule ExPool.Pool.State do
     * `:size` - Size of the pool
     * `:sup` - Pool supervisor
     * `:workers` - List of available worker processes
-    * `:queue` - Queue to store the waiting requests
+    * `:queue` - Waiting to store the waiting requests
   """
 
   alias ExPool.Pool.State.Workers
-  alias ExPool.Pool.State.Queue
+  alias ExPool.Pool.State.Waiting
 
   @type t :: %__MODULE__{
     worker_mod: atom,
@@ -55,16 +55,16 @@ defmodule ExPool.Pool.State do
 
   @doc "Adds an request to the waiting queue."
   @spec enqueue(State.t, from :: any) :: State.t
-  def enqueue(state, from), do: Queue.push(state, from)
+  def enqueue(state, from), do: Waiting.push(state, from)
 
   @doc "Pops a request from the waiting queue."
   @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
-  def pop_from_queue(state), do: Queue.pop(state)
+  def pop_from_queue(state), do: Waiting.pop(state)
 
   defp start(state) do
     state
     |> Workers.setup
-    |> Queue.setup
+    |> Waiting.setup
     |> prepopulate
   end
 
