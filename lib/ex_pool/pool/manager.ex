@@ -72,12 +72,13 @@ defmodule ExPool.Pool.Manager do
     pool and responds with `{:ok, state}`.
 
     * There is any worker request pending: The worker is not stored. Instead
-    the term identifying the request is returned expecting the caller to yield
-    the resource to the requester. It responds with `{:check_out, {term, state}`.
+    the term identifying the request (`from`) is returned expecting the caller to yield
+    the resource to the requester. It responds with
+    `{:check_out, {from, worker, state}`.
 
   """
   @spec check_in(State.t, pid) ::
-    {:ok, State.t} | {:check_out, {any, worker :: pid, State.t}}
+    {:ok, State.t} | {:check_out, {from :: any, worker :: pid, State.t}}
   def check_in(state, worker) do
     case State.pop_from_queue(state) do
       {:ok, {from, state}} -> {:check_out, {from, worker, state}}
