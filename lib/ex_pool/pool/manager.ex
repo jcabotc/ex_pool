@@ -45,7 +45,19 @@ defmodule ExPool.Pool.Manager do
   """
   @spec new(config :: [Keyword]) :: State.t
   def new(config) do
-    State.new(config)
+    State.new(config) |> prepopulate
+  end
+
+  defp prepopulate(%{size: size} = state) do
+    prepopulate(state, size)
+  end
+
+  defp prepopulate(state, 0), do: state
+  defp prepopulate(state, remaining) do
+    {worker, state} = State.create_worker(state)
+    ref             = Process.monitor(worker)
+
+    state |> State.watch(worker, :worker, ref) |> prepopulate(remaining - 1)
   end
 
   @doc """
@@ -97,6 +109,11 @@ defmodule ExPool.Pool.Manager do
   end
 
   defp handle_worker_down(state, worker) do
-    state |> State.forget(worker, :worker) |> State.create_worker
+    {new_worker, state} = state
+                        |> State.forget(worker, :worker)
+                        |> State.create_worker
+
+    ref = Process.monitor(new_worker)
+    state |> State.watch(new_worker, :worker, ref)
   end
 end
