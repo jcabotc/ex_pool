@@ -85,6 +85,13 @@ defmodule ExPool.Pool do
     {:noreply, new_state}
   end
 
+  @doc false
+  def handle_info({:DOWN, ref, :process, _obj, _reason}, state) do
+    state = Manager.process_down(state, ref)
+
+    {:noreply, state}
+  end
+
   defp handle_check_in({:ok, state}) do
     state
   end

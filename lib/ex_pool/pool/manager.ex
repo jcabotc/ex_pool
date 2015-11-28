@@ -85,4 +85,18 @@ defmodule ExPool.Pool.Manager do
       {:empty, state}      -> {:ok, State.put_worker(state, worker)}
     end
   end
+
+  @doc """
+  Handle a process down.
+  """
+  @spec process_down(State.t, reference) :: any
+  def process_down(state, ref) do
+    case State.pid_from_ref(state, ref) do
+      {:ok, {:worker, worker}} -> handle_worker_down(state, worker)
+    end
+  end
+
+  defp handle_worker_down(state, worker) do
+    state |> State.forget(worker) |> State.create_worker
+  end
 end

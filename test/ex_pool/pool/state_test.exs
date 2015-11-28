@@ -13,9 +13,12 @@ defmodule ExPool.Pool.StateTest do
     {:ok, %{state: state}}
   end
 
-  test "#get_worker, #put_worker", %{state: state} do
+  test "#create_worker, #get_worker, #put_worker", %{state: state} do
     assert {:ok, {worker_1, state}}  = State.get_worker(state)
     assert {:empty, ^state}          = State.get_worker(state)
+
+    state = State.create_worker(state)
+    assert {:ok, {_worker_2, state}}  = State.get_worker(state)
 
     state = State.put_worker(state, worker_1)
     assert {:ok, {^worker_1, _state}} = State.get_worker(state)

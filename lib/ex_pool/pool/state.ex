@@ -48,6 +48,14 @@ defmodule ExPool.Pool.State do
   end
 
   # Workers
+  @doc "Creates a new worker"
+  @spec create_worker(State.t) :: State.t
+  def create_worker(state) do
+    {worker, state} = Workers.create(state)
+    Monitors.watch(state, :worker, worker)
+    state
+  end
+
   @doc "Retrieve an available worker."
   @spec get_worker(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
   def get_worker(state), do: Workers.get(state)
@@ -93,13 +101,6 @@ defmodule ExPool.Pool.State do
 
   defp prepopulate(state, 0), do: state
   defp prepopulate(state, remaining) do
-    state |> new_worker |> prepopulate(remaining - 1)
-  end
-
-  defp new_worker(state) do
-    {worker, state} = Workers.create(state)
-    Monitors.watch(state, :worker, worker)
-
-    state
+    state |> create_worker |> prepopulate(remaining - 1)
   end
 end
