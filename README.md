@@ -2,7 +2,7 @@
 
 A generic pooling library for Elixir.
 
-[Documentation for ExPool is available online](http://hexdocs.pm/plug/).
+[Documentation for ExPool is available online](http://hexdocs.pm/ex_pool/).
 
 ## Installation
 
@@ -10,7 +10,7 @@ Add ExPool to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_pool, "~> 0.0.3"}]
+  [{:ex_pool, "~> 0.0.4"}]
 end
 ```
 
@@ -138,7 +138,7 @@ First we add ExPool and ExRedis as dependencies of the application in our `mix.e
 
 ```elixir
   defp deps do
-    [{:ex_pool, "~> 0.0.3"},
+    [{:ex_pool, "~> 0.0.4"},
      {:exredis, ">= 0.2.2"}]
   end
 ```
