@@ -11,7 +11,8 @@ defmodule ExPool.Pool.State do
     * `:queue` - Queue to store the waiting requests
   """
 
-  alias ExPool.Pool.Supervisor, as: PoolSupervisor
+  alias ExPool.Pool.State.Workers
+  alias ExPool.Pool.State.Queue
 
   @type t :: %__MODULE__{
     worker_mod: atom,
@@ -44,63 +45,37 @@ defmodule ExPool.Pool.State do
     %__MODULE__{worker_mod: worker_mod, size: size} |> start
   end
 
-  @doc """
-  Get a worker and remove it from the workers list.
-  """
+  @doc "Retrieve an available worker."
   @spec get_worker(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
-  def get_worker(%{workers: []} = state) do
-    {:empty, state}
-  end
-  def get_worker(%{workers: [worker|rest]} = state) do
-    {:ok, {worker, %{state | workers: rest}}}
-  end
+  def get_worker(state), do: Workers.get(state)
 
-  @doc """
-  Add a worker to the workers list.
-  """
+  @doc "Return a worker."
   @spec put_worker(State.t, pid) :: State.t
-  def put_worker(%{workers: workers} = state, worker) do
-    %{state | workers: [worker|workers]}
-  end
+  def put_worker(state, worker), do: Workers.put(state, worker)
 
-  @doc """
-  Adds a pair (pid, ref) to the queue.
-  """
+  @doc "Adds an request to the waiting queue."
   @spec enqueue(State.t, from :: any) :: State.t
-  def enqueue(%{queue: queue} = state, from) do
-    %{state | queue: :queue.in(from, queue)}
-  end
+  def enqueue(state, from), do: Queue.push(state, from)
 
-  @doc """
-  Pops a pair (pid, ref) from the queue.
-  """
+  @doc "Pops a request from the waiting queue."
   @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
-  def pop_from_queue(%{queue: queue} = state) do
-    case :queue.out(queue) do
-      {{:value, from}, new_queue} -> {:ok, {from, %{state | queue: new_queue}}}
-      {:empty, _queue}            -> {:empty, state}
-    end
-  end
+  def pop_from_queue(state), do: Queue.pop(state)
 
   defp start(state) do
-    state |> create_resources |> prepopulate
+    state
+    |> Workers.setup
+    |> Queue.setup
+    |> prepopulate
   end
 
-  defp create_resources(%{worker_mod: worker_mod} = state) do
-    {:ok, sup} = PoolSupervisor.start_link(worker_mod)
-    queue      = :queue.new
-
-    %{state | sup: sup, queue: queue, workers: []}
+  defp prepopulate(%{size: size} = state) do
+    prepopulate(state, size)
   end
 
-  defp prepopulate(%{size: size, sup: sup} = state) do
-    workers = for _i <- 1..size, do: create_worker(sup)
-
-    %{state | workers: workers}
-  end
-
-  defp create_worker(sup) do
-    {:ok, worker} = PoolSupervisor.start_child(sup)
-    worker
+  defp prepopulate(state, 0), do: state
+  defp prepopulate(state, remaining) do
+    state
+    |> Workers.create
+    |> prepopulate(remaining - 1)
   end
 end
