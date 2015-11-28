@@ -31,4 +31,12 @@ defmodule ExPool.PoolTest do
     assert :ok       = Pool.check_in(pool, worker_1)
     assert ^worker_1 = Pool.check_out(pool)
   end
+
+  test "fault tolerancy on worker crash", %{pool: pool} do
+    worker = Pool.check_out(pool)
+    Agent.stop(worker)
+
+    assert Pool.check_out(pool) |> Process.alive?
+    assert Pool.check_out(pool) |> Process.alive?
+  end
 end
