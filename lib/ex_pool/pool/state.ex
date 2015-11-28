@@ -71,16 +71,16 @@ defmodule ExPool.Pool.State do
 
   # Monitors
   @doc "Monitors a worker"
-  @spec watch(State.t, worker :: pid, tag :: atom, reference) :: State.t
-  def watch(state, worker, tag, ref), do: Monitors.add(state, worker, tag, ref)
+  @spec watch(State.t, item :: any, reference) :: State.t
+  def watch(state, item, ref), do: Monitors.add(state, item, ref)
 
   @doc "Gets a worker from its reference"
-  @spec pid_from_ref(State.t, reference) :: {:ok, {tag :: atom, pid}} | :not_found
+  @spec pid_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
   def pid_from_ref(state, reference), do: Monitors.pid_from_ref(state, reference)
 
   @doc "Demonitors a worker"
-  @spec forget(State.t, worker :: pid, tag :: atom) :: State.t
-  def forget(state, worker, tag), do: Monitors.forget(state, worker, tag)
+  @spec forget(State.t, item :: any) :: State.t
+  def forget(state, item), do: Monitors.forget(state, item)
 
   # Helpers
   defp start(state) do

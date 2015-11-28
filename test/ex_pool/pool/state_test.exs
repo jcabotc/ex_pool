@@ -36,10 +36,10 @@ defmodule ExPool.Pool.StateTest do
   test "#add, #pid_from_ref, #forget", %{state: state} do
     worker = TestWorker.start_link
 
-    state = State.watch(state, worker, :worker, :ref)
-    assert {:ok, {:worker, ^worker}} = State.pid_from_ref(state, :ref)
+    state = State.watch(state, {worker, :worker}, :ref)
+    assert {:ok, {^worker, :worker}} = State.pid_from_ref(state, :ref)
 
-    State.forget(state, worker, :worker)
+    State.forget(state, {worker, :worker})
     assert :not_found = State.pid_from_ref(state, :ref)
   end
 end

@@ -17,13 +17,14 @@ defmodule ExPool.Pool.State.MonitorsTest do
 
   test "#add, #pid_from_ref, #forget", %{state: state} do
     worker = new_pid
-    state  = Monitors.add(state, worker, :worker, :ref_1)
-    state  = Monitors.add(state, worker, :client, :ref_2)
 
-    assert {:ok, {:client, ^worker}} = Monitors.pid_from_ref(state, :ref_2)
-    assert {:ok, {:worker, ^worker}} = Monitors.pid_from_ref(state, :ref_1)
+    state  = Monitors.add(state, {worker, :worker}, :ref_1)
+    state  = Monitors.add(state, {worker, :client}, :ref_2)
 
-    state = Monitors.forget(state, worker, :client)
+    assert {:ok, {^worker, :client}} = Monitors.pid_from_ref(state, :ref_2)
+    assert {:ok, {^worker, :worker}} = Monitors.pid_from_ref(state, :ref_1)
+
+    state = Monitors.forget(state, {worker, :client})
     assert :not_found = Monitors.pid_from_ref(state, :ref_2)
   end
 end
