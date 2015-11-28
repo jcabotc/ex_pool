@@ -12,35 +12,37 @@ defmodule ExPool.Pool.State.Monitors do
   end
 
   @doc """
-  Monitors the given worker and stores the reference.
+  Monitors the given pid and stores the reference and the tag.
   """
-  @spec watch(State.t, worker :: pid) :: State.t
-  def watch(%{monitors: monitors} = state, worker) do
-    worker_ref = Process.monitor(worker)
-    :ets.insert(monitors, {worker, worker_ref})
+  @spec watch(State.t, pid, tag :: atom) :: State.t
+  def watch(%{monitors: monitors} = state, tag, pid) do
+    ref = Process.monitor(pid)
+    :ets.insert(monitors, {pid, tag, ref})
 
     state
   end
 
   @doc """
-  Gets a worker from the monitor reference.
+  Gets a pid and its tag from the monitor reference.
   """
-  @spec worker_from_ref(State.t, reference) :: worker :: pid
-  def worker_from_ref(%{monitors: monitors}, worker_ref) do
-    [[worker]] = :ets.match(monitors, {:"$1", worker_ref})
-
-    worker
+  @spec pid_from_ref(State.t, reference) ::
+    {:ok, {tag :: atom, pid}} | :not_found
+  def pid_from_ref(%{monitors: monitors}, ref) do
+    case :ets.match(monitors, {:"$1", :"$2", ref}) do
+      [[pid, tag]] -> {:ok, {tag, pid}}
+      []           -> :not_found
+    end
   end
 
   @doc """
-  Demonitors the given worker and removes the reference.
+  Demonitors the given pid and removes the reference.
   """
-  @spec forget(State.t, worker :: pid) :: State.t
-  def forget(%{monitors: monitors} = state, worker) do
-    [{^worker, worker_ref}] = :ets.lookup(monitors, worker)
+  @spec forget(State.t, pid) :: State.t
+  def forget(%{monitors: monitors} = state, pid) do
+    [{^pid, _tag, ref}] = :ets.lookup(monitors, pid)
 
-    Process.demonitor(worker_ref)
-    :ets.delete(monitors, worker)
+    Process.demonitor(ref)
+    :ets.delete(monitors, pid)
 
     state
   end

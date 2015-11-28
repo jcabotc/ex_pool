@@ -67,12 +67,12 @@ defmodule ExPool.Pool.State do
 
   # Monitors
   @doc "Monitors a worker"
-  @spec watch(State.t, worker :: pid) :: State.t
-  def watch(state, worker), do: Monitors.watch(state, worker)
+  @spec watch(State.t, tag :: atom, worker :: pid) :: State.t
+  def watch(state, tag, worker), do: Monitors.watch(state, tag, worker)
 
   @doc "Gets a worker from its reference"
-  @spec worker_from_ref(State.t, reference) :: State.t
-  def worker_from_ref(state, reference), do: Monitors.worker_from_ref(state, reference)
+  @spec pid_from_ref(State.t, reference) :: {:ok, {tag :: atom, pid}} | :not_found
+  def pid_from_ref(state, reference), do: Monitors.pid_from_ref(state, reference)
 
   @doc "Demonitors a worker"
   @spec forget(State.t, worker :: pid) :: State.t
@@ -93,8 +93,11 @@ defmodule ExPool.Pool.State do
 
   defp prepopulate(state, 0), do: state
   defp prepopulate(state, remaining) do
+    state |> new_worker |> prepopulate(remaining - 1)
+  end
+
+  defp new_worker(state) do
+    {_worker, state} = Workers.create(state)
     state
-    |> Workers.create
-    |> prepopulate(remaining - 1)
   end
 end

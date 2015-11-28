@@ -30,12 +30,12 @@ defmodule ExPool.Pool.StateTest do
 
   test "#watch, #worker_from_ref, #forget", %{state: state} do
     {:ok, {worker, state}} = State.get_worker(state)
-    state                  = State.watch(state, worker)
+    state                  = State.watch(state, :worker, worker)
 
     Agent.stop(worker)
-    assert_receive {:DOWN, worker_ref, :process, _, _}
+    assert_receive {:DOWN, ref, :process, _, _}
 
-    assert ^worker = State.worker_from_ref(state, worker_ref)
+    assert {:ok, {:worker, ^worker}} = State.pid_from_ref(state, ref)
     State.forget(state, worker)
   end
 end

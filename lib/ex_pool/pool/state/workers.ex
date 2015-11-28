@@ -18,11 +18,11 @@ defmodule ExPool.Pool.State.Workers do
   @doc """
   Creates a new worker.
   """
-  @spec create(State.t) :: State.t
+  @spec create(State.t) :: {pid, State.t}
   def create(%{workers: workers, sup: sup} = state) do
     {:ok, worker} = PoolSupervisor.start_child(sup)
 
-    %{state | workers: [worker|workers]}
+    {worker, %{state | workers: [worker|workers]}}
   end
 
   @doc """

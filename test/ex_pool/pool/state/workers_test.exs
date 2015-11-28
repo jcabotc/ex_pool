@@ -15,8 +15,8 @@ defmodule ExPool.Pool.State.WorkersTest do
   end
 
   test "#create, #get, #put", %{state: state} do
-    state = Workers.create(state)
-    state = Workers.create(state)
+    {_worker, state} = Workers.create(state)
+    {_worker, state} = Workers.create(state)
 
     assert {:ok, {worker_1, state}}  = Workers.get(state)
     assert {:ok, {_worker_2, state}} = Workers.get(state)
