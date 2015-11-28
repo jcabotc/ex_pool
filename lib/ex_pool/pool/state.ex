@@ -97,7 +97,9 @@ defmodule ExPool.Pool.State do
   end
 
   defp new_worker(state) do
-    {_worker, state} = Workers.create(state)
+    {worker, state} = Workers.create(state)
+    Monitors.watch(state, :worker, worker)
+
     state
   end
 end
