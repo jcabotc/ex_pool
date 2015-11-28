@@ -16,10 +16,10 @@ defmodule ExPool.Pool.State do
 
   @type t :: %__MODULE__{
     worker_mod: atom,
-    size: pos_integer,
+    size: non_neg_integer,
     sup: pid,
     workers: [pid],
-    monitors: :ets.tab,
+    monitors: :ets.tid,
     waiting: any
   }
   defstruct [:worker_mod, :size,
@@ -46,6 +46,7 @@ defmodule ExPool.Pool.State do
     %__MODULE__{worker_mod: worker_mod, size: size} |> start
   end
 
+  # Workers
   @doc "Retrieve an available worker."
   @spec get_worker(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
   def get_worker(state), do: Workers.get(state)
@@ -54,6 +55,8 @@ defmodule ExPool.Pool.State do
   @spec put_worker(State.t, pid) :: State.t
   def put_worker(state, worker), do: Workers.put(state, worker)
 
+  # Waiting
+  @doc "Retrieve an available worker."
   @doc "Adds an request to the waiting queue."
   @spec enqueue(State.t, from :: any) :: State.t
   def enqueue(state, from), do: Waiting.push(state, from)
