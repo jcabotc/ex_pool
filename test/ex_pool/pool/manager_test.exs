@@ -8,7 +8,7 @@ defmodule ExPool.Pool.ManagerTest do
   end
 
   setup do
-    state = Manager.new(worker_mod: TestWorker, size: 2)
+    state = Manager.new(worker_mod: TestWorker, size: 1)
 
     {:ok, %{state: state}}
   end
@@ -19,18 +19,17 @@ defmodule ExPool.Pool.ManagerTest do
   end
 
   test "#check_in and #check_out", %{state: state} do
-    {pid_1, pid_2, pid_3} = {new_pid, new_pid, new_pid}
+    {pid_1, pid_2} = {new_pid, new_pid}
 
     assert {:ok, {worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
-    assert {:ok, {worker_2, state}} = Manager.check_out(state, {pid_2, :ref_2})
-    assert {:waiting, state}        = Manager.check_out(state, {pid_3, :ref_3})
+    assert {:waiting, state}        = Manager.check_out(state, {pid_2, :ref_2})
 
-    assert {:check_out, {{^pid_3, :ref_3}, ^worker_2, state}} = Manager.check_in(state, worker_2)
+    assert {:check_out, {{^pid_2, :ref_2}, ^worker_1, state}} = Manager.check_in(state, worker_1)
     assert {:ok, _state}                                      = Manager.check_in(state, worker_1)
   end
 
-  test "crash and #process_down", %{state: state} do
-    {pid_1, pid_2, pid_3, pid_4} = {new_pid, new_pid, new_pid, new_pid}
+  test "worker crash and #process_down", %{state: state} do
+    {pid_1, pid_2, pid_3} = {new_pid, new_pid, new_pid}
 
     assert {:ok, {worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
     Agent.stop(worker_1)
@@ -40,8 +39,15 @@ defmodule ExPool.Pool.ManagerTest do
 
     assert {:ok, {worker_2, state}} = Manager.check_out(state, {pid_2, :ref_2})
     assert Process.alive?(worker_2)
-    assert {:ok, {worker_3, state}} = Manager.check_out(state, {pid_3, :ref_3})
-    assert Process.alive?(worker_3)
-    assert {:waiting, _state} = Manager.check_out(state, {pid_4, :ref_4})
+    assert {:waiting, _state} = Manager.check_out(state, {pid_3, :ref_3})
   end
+
+  # test "client crash while using the worker #process_down", %{state: state} do
+  #   {pid_1, pid_2} = {new_pid, new_pid}
+  #
+  #   assert {:ok, {worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
+  #   Agent.stop(pid_1)
+  #
+  #   assert {:ok, {worker_2, state}} = Manager.check_out(state, {pid_2, :ref_2})
+  # end
 end

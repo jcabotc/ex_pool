@@ -33,13 +33,15 @@ defmodule ExPool.Pool.StateTest do
     assert {:empty, _state}      = State.pop_from_queue(state)
   end
 
-  test "#add, #pid_from_ref, #forget", %{state: state} do
+  test "#add, #item_from_ref, #forget", %{state: state} do
     worker = TestWorker.start_link
 
     state = State.watch(state, {:worker, worker}, :ref)
-    assert {:ok, {:worker, ^worker}} = State.pid_from_ref(state, :ref)
+
+    assert {:ok, {:worker, ^worker}} = State.item_from_ref(state, :ref)
+    assert {:ok, :ref}               = State.ref_from_item(state, {:worker, worker})
 
     State.forget(state, {:worker, worker})
-    assert :not_found = State.pid_from_ref(state, :ref)
+    assert :not_found = State.item_from_ref(state, :ref)
   end
 end

@@ -12,7 +12,7 @@ defmodule ExPool.Pool.State.Monitors do
   end
 
   @doc """
-  Adds the given worker to the state monitors with its tag and reference.
+  Adds the given item and its associated reference
   """
   @spec add(State.t, item :: any, reference) :: State.t
   def add(%{monitors: monitors} = state, item, ref) do
@@ -22,10 +22,10 @@ defmodule ExPool.Pool.State.Monitors do
   end
 
   @doc """
-  Gets a worker and its tag from a reference.
+  Gets an item from its reference
   """
-  @spec pid_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
-  def pid_from_ref(%{monitors: monitors}, ref) do
+  @spec item_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
+  def item_from_ref(%{monitors: monitors}, ref) do
     case :ets.match(monitors, {:"$1", ref}) do
       [[item]] -> {:ok, item}
       []       -> :not_found
@@ -33,7 +33,18 @@ defmodule ExPool.Pool.State.Monitors do
   end
 
   @doc """
-  Removes the given worker and tag from the state monitors
+  Gets a reference from its item
+  """
+  @spec ref_from_item(State.t, item :: any) :: {:ok, reference} | :not_found
+  def ref_from_item(%{monitors: monitors}, item) do
+    case :ets.lookup(monitors, item) do
+      [{^item, ref}] -> {:ok, ref}
+      []             -> :not_found
+    end
+  end
+
+  @doc """
+  Removes the given item and its associated reference
   """
   @spec forget(State.t, item :: any) :: State.t
   def forget(%{monitors: monitors} = state, item) do

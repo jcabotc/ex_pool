@@ -120,7 +120,7 @@ defmodule ExPool.Pool.Manager do
   """
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
-    case State.pid_from_ref(state, ref) do
+    case State.item_from_ref(state, ref) do
       {:ok, {:worker, worker}} -> handle_worker_down(state, worker)
     end
   end

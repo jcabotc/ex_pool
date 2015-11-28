@@ -70,15 +70,19 @@ defmodule ExPool.Pool.State do
   def pop_from_queue(state), do: Waiting.pop(state)
 
   # Monitors
-  @doc "Monitors a worker"
+  @doc "Adds a item to monitors"
   @spec watch(State.t, item :: any, reference) :: State.t
   def watch(state, item, ref), do: Monitors.add(state, item, ref)
 
-  @doc "Gets a worker from its reference"
-  @spec pid_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
-  def pid_from_ref(state, reference), do: Monitors.pid_from_ref(state, reference)
+  @doc "Gets an item from its reference"
+  @spec item_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
+  def item_from_ref(state, ref), do: Monitors.item_from_ref(state, ref)
 
-  @doc "Demonitors a worker"
+  @doc "Gets a reference from its item"
+  @spec ref_from_item(State.t, item :: any) :: {:ok, reference} | :not_found
+  def ref_from_item(state, item), do: Monitors.ref_from_item(state, item)
+
+  @doc "Removes an item from monitors"
   @spec forget(State.t, item :: any) :: State.t
   def forget(state, item), do: Monitors.forget(state, item)
 
