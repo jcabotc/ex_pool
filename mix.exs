@@ -3,12 +3,14 @@ defmodule ExPool.Mixfile do
 
   def project do
     [app: :ex_pool,
+     version: "0.0.2",
      name: "ExPool",
-     version: "0.0.1",
+     source_url: "https://github.com/jcabotc/ex_pool",
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps,
+     docs: [extras: ["README.md"]]]
   end
 
   def application do

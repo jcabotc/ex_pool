@@ -10,7 +10,7 @@ Add ex_pool to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_pool, "~> 0.0.1"}]
+  [{:ex_pool, "~> 0.0.2"}]
 end
 ```
 
@@ -138,7 +138,7 @@ First we add ExPool and ExRedis as dependencies of the application in our `mix.e
 
 ```elixir
   defp deps do
-    [{:ex_pool, "~> 0.0.1"},
+    [{:ex_pool, "~> 0.0.2"},
      {:exredis, ">= 0.2.2"}]
   end
 ```
