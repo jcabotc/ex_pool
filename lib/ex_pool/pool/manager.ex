@@ -69,10 +69,14 @@ defmodule ExPool.Pool.Manager do
   """
   @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:empty, State.t}
   def check_out(state, from) do
-    case State.get_worker(state) do
-      {:ok, {worker, new_state}} -> {:ok, {worker, new_state}}
-      {:empty, state}            -> {:waiting, State.enqueue(state, from)}
-    end
+    State.get_worker(state) |> handle_check_out(from)
+  end
+
+  defp handle_check_out({:ok, {worker, new_state}}, {pid, _ref}) do
+    {:ok, {worker, new_state}}
+  end
+  defp handle_check_out({:empty, state}, {pid, _ref} = from) do
+    {:waiting, State.enqueue(state, from)}
   end
 
   @doc """
@@ -92,14 +96,27 @@ defmodule ExPool.Pool.Manager do
   @spec check_in(State.t, pid) ::
     {:ok, State.t} | {:check_out, {from :: any, worker :: pid, State.t}}
   def check_in(state, worker) do
-    case State.pop_from_queue(state) do
-      {:ok, {from, state}} -> {:check_out, {from, worker, state}}
-      {:empty, state}      -> {:ok, State.put_worker(state, worker)}
-    end
+    State.pop_from_queue(state) |> handle_check_in(worker)
+  end
+
+  def handle_check_in({:ok, {from, state}}, worker) do
+    {:check_out, {from, worker, state}}
+  end
+  def handle_check_in({:empty, state}, worker) do
+    {:ok, State.put_worker(state, worker)}
   end
 
   @doc """
   Handle a process down.
+
+  There are 2 types of monitored processes that can crash:
+
+    * worker - If the crashed process is a worker, a new one is started
+    and monitored
+
+    * client - If the crashed process is a client, the worker that the
+    process was using is returned to the pool
+
   """
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
