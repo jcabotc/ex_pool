@@ -57,7 +57,7 @@ defmodule ExPool.Pool.Manager do
     {worker, state} = State.create_worker(state)
     ref             = Process.monitor(worker)
 
-    state |> State.watch({worker, :worker}, ref) |> prepopulate(remaining - 1)
+    state |> State.watch({:worker, worker}, ref) |> prepopulate(remaining - 1)
   end
 
   @doc """
@@ -121,16 +121,16 @@ defmodule ExPool.Pool.Manager do
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
     case State.pid_from_ref(state, ref) do
-      {:ok, {worker, :worker}} -> handle_worker_down(state, worker)
+      {:ok, {:worker, worker}} -> handle_worker_down(state, worker)
     end
   end
 
   defp handle_worker_down(state, worker) do
     {new_worker, state} = state
-                        |> State.forget({worker, :worker})
+                        |> State.forget({:worker, worker})
                         |> State.create_worker
 
     ref = Process.monitor(new_worker)
-    state |> State.watch({new_worker, :worker}, ref)
+    state |> State.watch({:worker, new_worker}, ref)
   end
 end
