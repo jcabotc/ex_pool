@@ -2,7 +2,7 @@
 
 A generic pooling library for Elixir.
 
-[Documentation for ExPool is available online](http://hexdocs.pm/plug/).
+[Documentation for ExPool is available online](http://hexdocs.pm/ex_pool/).
 
 ## Installation
 
