@@ -10,7 +10,7 @@ defmodule ExPool.Pool.State.MonitorsTest do
     {:ok, %{state: state}}
   end
 
-  test "#watch, #worker_from_ref, #forget", %{state: state} do
+  test "#watch, #worker_from_ref on fail", %{state: state} do
     {:ok, worker} = Agent.start_link(fn -> :ok end)
 
     state = Monitors.watch(state, worker)
@@ -18,8 +18,15 @@ defmodule ExPool.Pool.State.MonitorsTest do
 
     assert_receive {:DOWN, worker_ref, :process, _, _}
     assert ^worker = Monitors.worker_from_ref(state, worker_ref)
+  end
 
-    Monitors.forget(state, worker)
-    assert catch_error Monitors.worker_from_ref(state, worker_ref)
+  test "#watch, #forget with no fail", %{state: state} do
+    {:ok, worker} = Agent.start_link(fn -> :ok end)
+
+    state  = Monitors.watch(state, worker)
+    _state = Monitors.forget(state, worker)
+    :ok    = Agent.stop(worker)
+
+    refute_receive {:DOWN, _, :process, _, _}
   end
 end

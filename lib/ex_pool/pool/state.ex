@@ -13,6 +13,7 @@ defmodule ExPool.Pool.State do
 
   alias ExPool.Pool.State.Workers
   alias ExPool.Pool.State.Waiting
+  alias ExPool.Pool.State.Monitors
 
   @type t :: %__MODULE__{
     worker_mod: atom,
@@ -56,7 +57,6 @@ defmodule ExPool.Pool.State do
   def put_worker(state, worker), do: Workers.put(state, worker)
 
   # Waiting
-  @doc "Retrieve an available worker."
   @doc "Adds an request to the waiting queue."
   @spec enqueue(State.t, from :: any) :: State.t
   def enqueue(state, from), do: Waiting.push(state, from)
@@ -65,10 +65,25 @@ defmodule ExPool.Pool.State do
   @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
   def pop_from_queue(state), do: Waiting.pop(state)
 
+  # Monitors
+  @doc "Monitors a worker"
+  @spec watch(State.t, worker :: pid) :: State.t
+  def watch(state, worker), do: Monitors.watch(state, worker)
+
+  @doc "Gets a worker from its reference"
+  @spec worker_from_ref(State.t, reference) :: State.t
+  def worker_from_ref(state, reference), do: Monitors.worker_from_ref(state, reference)
+
+  @doc "Demonitors a worker"
+  @spec forget(State.t, worker :: pid) :: State.t
+  def forget(state, worker), do: Monitors.forget(state, worker)
+
+  # Helpers
   defp start(state) do
     state
     |> Workers.setup
     |> Waiting.setup
+    |> Monitors.setup
     |> prepopulate
   end
 

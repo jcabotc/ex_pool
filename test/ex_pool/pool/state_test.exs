@@ -25,6 +25,17 @@ defmodule ExPool.Pool.StateTest do
     state = State.enqueue(state, :from)
 
     assert {:ok, {:from, state}} = State.pop_from_queue(state)
-    assert {:empty, _state}        = State.pop_from_queue(state)
+    assert {:empty, _state}      = State.pop_from_queue(state)
+  end
+
+  test "#watch, #worker_from_ref, #forget", %{state: state} do
+    {:ok, {worker, state}} = State.get_worker(state)
+    state                  = State.watch(state, worker)
+
+    Agent.stop(worker)
+    assert_receive {:DOWN, worker_ref, :process, _, _}
+
+    assert ^worker = State.worker_from_ref(state, worker_ref)
+    State.forget(state, worker)
   end
 end
