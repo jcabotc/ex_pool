@@ -39,4 +39,28 @@ defmodule ExPool.PoolTest do
     assert Pool.check_out(pool) |> Process.alive?
     assert Pool.check_out(pool) |> Process.alive?
   end
+
+  test "fault tolerancy on requester process crash when using the worker", %{pool: pool} do
+    _worker_1 = Pool.check_out(pool)
+
+    parent = self
+    spawn fn ->
+      worker_2 = Pool.check_out(pool)
+      send(parent, {:checked_out, worker_2})
+    end
+
+    assert_receive {:checked_out, worker_2}
+    assert ^worker_2 = Pool.check_out(pool)
+  end
+
+  test "fault tolerancy on requester process crash when it is waiting", %{pool: pool} do
+    _worker_1 = Pool.check_out(pool)
+    worker_2  = Pool.check_out(pool)
+
+    pid = spawn fn -> Pool.check_out(pool) end
+    Process.exit(pid, :kill)
+
+    Pool.check_in(pool, worker_2)
+    assert ^worker_2 = Pool.check_out(pool)
+  end
 end
