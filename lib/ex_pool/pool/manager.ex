@@ -72,8 +72,11 @@ defmodule ExPool.Pool.Manager do
     State.get_worker(state) |> handle_check_out(from)
   end
 
-  defp handle_check_out({:ok, {worker, new_state}}, {pid, _ref}) do
-    {:ok, {worker, new_state}}
+  defp handle_check_out({:ok, {worker, state}}, {pid, _ref}) do
+    ref   = Process.monitor(pid)
+    state = state |> State.watch({:in_use, worker}, ref)
+
+    {:ok, {worker, state}}
   end
   defp handle_check_out({:empty, state}, {pid, _ref} = from) do
     {:waiting, State.enqueue(state, from)}
@@ -103,7 +106,14 @@ defmodule ExPool.Pool.Manager do
     {:check_out, {from, worker, state}}
   end
   def handle_check_in({:empty, state}, worker) do
-    {:ok, State.put_worker(state, worker)}
+    {:ok, ref} = State.ref_from_item(state, {:in_use, worker})
+    Process.demonitor(ref)
+
+    state = state
+            |> State.forget({:in_use, worker})
+            |> State.put_worker(worker)
+
+    {:ok, state}
   end
 
   @doc """
@@ -120,17 +130,20 @@ defmodule ExPool.Pool.Manager do
   """
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
-    case State.item_from_ref(state, ref) do
-      {:ok, {:worker, worker}} -> handle_worker_down(state, worker)
-    end
+    State.item_from_ref(state, ref) |> handle_process_down(state)
   end
 
-  defp handle_worker_down(state, worker) do
+  defp handle_process_down({:ok, {:worker, worker}}, state) do
     {new_worker, state} = state
                         |> State.forget({:worker, worker})
                         |> State.create_worker
 
     ref = Process.monitor(new_worker)
     state |> State.watch({:worker, new_worker}, ref)
+  end
+  defp handle_process_down({:ok, {:in_use, worker}}, state) do
+    state
+    |> State.forget({:in_use, worker})
+    |> State.put_worker(worker)
   end
 end

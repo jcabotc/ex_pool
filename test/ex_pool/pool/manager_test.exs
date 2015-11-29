@@ -42,12 +42,16 @@ defmodule ExPool.Pool.ManagerTest do
     assert {:waiting, _state} = Manager.check_out(state, {pid_3, :ref_3})
   end
 
-  # test "client crash while using the worker #process_down", %{state: state} do
-  #   {pid_1, pid_2} = {new_pid, new_pid}
-  #
-  #   assert {:ok, {worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
-  #   Agent.stop(pid_1)
-  #
-  #   assert {:ok, {worker_2, state}} = Manager.check_out(state, {pid_2, :ref_2})
-  # end
+  test "client crash while using the worker #process_down", %{state: state} do
+    {pid_1, pid_2} = {new_pid, new_pid}
+
+    assert {:ok, {_worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
+
+    Agent.stop(pid_1)
+    assert_receive {:DOWN, ref, :process, _, _}
+
+    state = Manager.process_down(state, ref)
+
+    assert {:ok, {_worker_2, _state}} = Manager.check_out(state, {pid_2, :ref_2})
+  end
 end
