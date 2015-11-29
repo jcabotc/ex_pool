@@ -1,4 +1,4 @@
-defmodule ExPool.Pool.Supervisor do
+defmodule ExPool.Manager.Workers.Supervisor do
   @moduledoc """
   Supervisor the pool workers.
   """

@@ -11,9 +11,9 @@ defmodule ExPool.Pool.State do
     * `:queue` - Waiting to store the waiting requests
   """
 
-  alias ExPool.Pool.Workers
-  alias ExPool.Pool.Waiting
-  alias ExPool.Pool.Monitors
+  alias ExPool.Manager.Workers
+  alias ExPool.Manager.Waiting
+  alias ExPool.Manager.Monitors
 
   @type t :: %__MODULE__{
     worker_mod: atom,

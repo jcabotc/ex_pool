@@ -1,8 +1,8 @@
-defmodule ExPool.Pool.WorkersTest do
+defmodule ExPool.Manager.WorkersTest do
   use ExUnit.Case
 
   alias ExPool.Pool.State
-  alias ExPool.Pool.Workers
+  alias ExPool.Manager.Workers
 
   defmodule TestWorker do
     def start_link(_opts \\ []), do: Agent.start_link(fn -> :ok end)
