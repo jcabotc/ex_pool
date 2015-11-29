@@ -176,4 +176,7 @@ defmodule ExPool.Manager do
          waiting_pid != pid
        end
   end
+  defp handle_process_down(:not_found, state) do
+    state
+  end
 end
