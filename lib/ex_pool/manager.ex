@@ -49,7 +49,12 @@ defmodule ExPool.Manager do
   """
   @spec new(config :: [Keyword]) :: State.t
   def new(config) do
-    State.new(config) |> prepopulate
+    config
+    |> State.new
+    |> Workers.setup
+    |> Waiting.setup
+    |> Monitors.setup
+    |> prepopulate
   end
 
   defp prepopulate(%{size: size} = state) do

@@ -7,9 +7,9 @@ defmodule ExPool.Pool.StateTest do
     def start_link(_opts \\ []), do: Agent.start_link(fn -> :ok end)
   end
 
-  setup do
-    state = State.new(worker_mod: TestWorker)
+  test "#new" do
+    state = State.new(worker_mod: TestWorker, size: 10)
 
-    {:ok, %{state: state}}
+    assert %{worker_mod: TestWorker, size: 10} = state
   end
 end
