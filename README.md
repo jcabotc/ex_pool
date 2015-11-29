@@ -198,5 +198,5 @@ end
 
 ## License
 
-Plug source code is released under Apache 2 License.
+ExPool source code is released under Apache 2 License.
 Check LICENSE file for more information.
