@@ -65,6 +65,10 @@ defmodule ExPool.Pool.State do
   @spec enqueue(State.t, from :: any) :: State.t
   def enqueue(state, from), do: Waiting.push(state, from)
 
+  @doc "Keeps on the waiting queue items that return true for the filter"
+  @spec keep_on_queue(State.t, filter :: (any -> boolean)) :: State.t
+  def keep_on_queue(state, filter), do: Waiting.keep(state, filter)
+
   @doc "Pops a request from the waiting queue."
   @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
   def pop_from_queue(state), do: Waiting.pop(state)

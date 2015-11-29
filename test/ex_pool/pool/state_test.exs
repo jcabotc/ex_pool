@@ -33,6 +33,14 @@ defmodule ExPool.Pool.StateTest do
     assert {:empty, _state}      = State.pop_from_queue(state)
   end
 
+  test "#keep_on_queue", %{state: state} do
+    state = state
+            |> State.enqueue(:from)
+            |> State.keep_on_queue(&(&1 != :from))
+
+    assert {:empty, _state} = State.pop_from_queue(state)
+  end
+
   test "#add, #item_from_ref, #forget", %{state: state} do
     worker = TestWorker.start_link
 

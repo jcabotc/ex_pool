@@ -20,4 +20,15 @@ defmodule ExPool.Pool.State.WaitingTest do
     assert {:ok, {:from_2, state}} = Waiting.pop(state)
     assert {:empty, _state}        = Waiting.pop(state)
   end
+
+  test "#remove", %{state: state} do
+    state = state
+            |> Waiting.push(:from_1)
+            |> Waiting.push(:from_2)
+            |> Waiting.push(:from_1)
+            |> Waiting.keep(&(&1 != :from_1))
+
+    assert {:ok, {:from_2, state}} = Waiting.pop(state)
+    assert {:empty, _state}        = Waiting.pop(state)
+  end
 end

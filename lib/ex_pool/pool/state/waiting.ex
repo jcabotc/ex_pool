@@ -4,7 +4,7 @@ defmodule ExPool.Pool.State.Waiting do
   """
 
   @doc """
-  Creates an empty queue
+  Creates an empty queue.
   """
   @spec setup(State.t) :: State.t
   def setup(state) do
@@ -12,7 +12,7 @@ defmodule ExPool.Pool.State.Waiting do
   end
 
   @doc """
-  Adds an item to the queue
+  Adds an item to the queue.
   """
   @spec push(State.t, item :: any) :: State.t
   def push(%{waiting: waiting} = state, item) do
@@ -20,7 +20,14 @@ defmodule ExPool.Pool.State.Waiting do
   end
 
   @doc """
-  Pops an item from the queue
+  Removes an item from the queue.
+  """
+  def keep(%{waiting: waiting} = state, filter) do
+    %{state | waiting: :queue.filter(filter, waiting)}
+  end
+
+  @doc """
+  Pops an item from the queue.
   """
   @spec pop(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
   def pop(%{waiting: waiting} = state) do

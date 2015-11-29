@@ -73,13 +73,21 @@ defmodule ExPool.Pool.Manager do
   end
 
   defp handle_check_out({:ok, {worker, state}}, {pid, _ref}) do
-    ref   = Process.monitor(pid)
-    state = state |> State.watch({:in_use, worker}, ref)
+    ref = Process.monitor(pid)
 
-    {:ok, {worker, state}}
+    new_state = state
+                |> State.watch({:in_use, worker}, ref)
+
+    {:ok, {worker, new_state}}
   end
   defp handle_check_out({:empty, state}, {pid, _ref} = from) do
-    {:waiting, State.enqueue(state, from)}
+    ref = Process.monitor(pid)
+
+    new_state = state
+                |> State.watch({:waiting, pid}, ref)
+                |> State.enqueue(from)
+
+    {:waiting, new_state}
   end
 
   @doc """
@@ -102,18 +110,24 @@ defmodule ExPool.Pool.Manager do
     State.pop_from_queue(state) |> handle_check_in(worker)
   end
 
-  def handle_check_in({:ok, {from, state}}, worker) do
-    {:check_out, {from, worker, state}}
+  def handle_check_in({:ok, {{pid, _} = from, state}}, worker) do
+    {:ok, ref} = State.ref_from_item(state, {:waiting, pid})
+
+    new_state = state
+                |> State.forget({:waiting, pid})
+                |> State.watch({:in_use, worker}, ref)
+
+    {:check_out, {from, worker, new_state}}
   end
   def handle_check_in({:empty, state}, worker) do
     {:ok, ref} = State.ref_from_item(state, {:in_use, worker})
     Process.demonitor(ref)
 
-    state = state
-            |> State.forget({:in_use, worker})
-            |> State.put_worker(worker)
+    new_state = state
+                |> State.forget({:in_use, worker})
+                |> State.put_worker(worker)
 
-    {:ok, state}
+    {:ok, new_state}
   end
 
   @doc """
@@ -145,5 +159,12 @@ defmodule ExPool.Pool.Manager do
     state
     |> State.forget({:in_use, worker})
     |> State.put_worker(worker)
+  end
+  defp handle_process_down({:ok, {:waiting, pid}}, state) do
+    state
+    |> State.forget({:waiting, pid})
+    |> State.keep_on_queue fn {waiting_pid, _ref} ->
+         waiting_pid != pid
+       end
   end
 end
