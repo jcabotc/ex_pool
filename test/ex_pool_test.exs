@@ -33,7 +33,6 @@ defmodule ExPoolTest do
       spawn fn ->
         result = ExPool.run(pool, &GenServer.call(&1, time))
         send(parent, result)
-        :timer.sleep(100)
       end
     end
 
