@@ -1,4 +1,4 @@
-defmodule ExPool.Pool.Manager do
+defmodule ExPool.Manager do
   @moduledoc """
   Module to start a pool, and check-in and check-out workers.
 
@@ -17,7 +17,7 @@ defmodule ExPool.Pool.Manager do
     def start_link(_), do: Agent.start_link(fn -> :ok end)
   end
 
-  alias ExPool.Pool.Manager
+  alias ExPool.Manager
 
   state = Manager(worker_mod: HardWorker, size: 1)
 

@@ -20,7 +20,7 @@ defmodule ExPool.Pool do
   ```
   """
 
-  alias ExPool.Pool.Manager
+  alias ExPool.Manager
 
   use GenServer
 
