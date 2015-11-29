@@ -3,7 +3,7 @@ defmodule ExPool.Mixfile do
 
   def project do
     [app: :ex_pool,
-     version: "0.0.4",
+     version: "0.1.0",
      name: "ExPool",
      description: "A generic pooling library for Elixir",
      source_url: "https://github.com/jcabotc/ex_pool",
