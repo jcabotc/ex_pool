@@ -1,4 +1,4 @@
-defmodule ExPool.Pool.State.Workers do
+defmodule ExPool.Pool.Workers do
   @moduledoc """
   Manages the available workers list of the pool.
   """
