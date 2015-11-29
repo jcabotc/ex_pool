@@ -10,7 +10,7 @@ Add ExPool to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:ex_pool, "~> 0.0.4"}]
+  [{:ex_pool, "~> 0.1.0"}]
 end
 ```
 
@@ -138,7 +138,7 @@ First we add ExPool and ExRedis as dependencies of the application in our `mix.e
 
 ```elixir
   defp deps do
-    [{:ex_pool, "~> 0.0.4"},
+    [{:ex_pool, "~> 0.1.0"},
      {:exredis, ">= 0.2.2"}]
   end
 ```
@@ -195,3 +195,8 @@ ExPool.run :redis, fn (client) ->
 end
 # => "bar"
 ```
+
+## License
+
+Plug source code is released under Apache 2 License.
+Check LICENSE file for more information.
