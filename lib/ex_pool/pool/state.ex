@@ -47,49 +47,6 @@ defmodule ExPool.Pool.State do
     %__MODULE__{worker_mod: worker_mod, size: size} |> start
   end
 
-  # Workers
-  @doc "Creates a new worker"
-  @spec create_worker(State.t) :: {worker :: pid, State.t}
-  def create_worker(state), do: Workers.create(state)
-
-  @doc "Retrieve an available worker."
-  @spec get_worker(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
-  def get_worker(state), do: Workers.get(state)
-
-  @doc "Return a worker."
-  @spec put_worker(State.t, pid) :: State.t
-  def put_worker(state, worker), do: Workers.put(state, worker)
-
-  # Waiting
-  @doc "Adds an request to the waiting queue."
-  @spec enqueue(State.t, from :: any) :: State.t
-  def enqueue(state, from), do: Waiting.push(state, from)
-
-  @doc "Keeps on the waiting queue items that return true for the filter"
-  @spec keep_on_queue(State.t, filter :: (any -> boolean)) :: State.t
-  def keep_on_queue(state, filter), do: Waiting.keep(state, filter)
-
-  @doc "Pops a request from the waiting queue."
-  @spec pop_from_queue(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
-  def pop_from_queue(state), do: Waiting.pop(state)
-
-  # Monitors
-  @doc "Adds a item to monitors"
-  @spec watch(State.t, item :: any, reference) :: State.t
-  def watch(state, item, ref), do: Monitors.add(state, item, ref)
-
-  @doc "Gets an item from its reference"
-  @spec item_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
-  def item_from_ref(state, ref), do: Monitors.item_from_ref(state, ref)
-
-  @doc "Gets a reference from its item"
-  @spec ref_from_item(State.t, item :: any) :: {:ok, reference} | :not_found
-  def ref_from_item(state, item), do: Monitors.ref_from_item(state, item)
-
-  @doc "Removes an item from monitors"
-  @spec forget(State.t, item :: any) :: State.t
-  def forget(state, item), do: Monitors.forget(state, item)
-
   # Helpers
   defp start(state) do
     state
