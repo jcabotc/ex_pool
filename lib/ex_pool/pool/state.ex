@@ -5,17 +5,19 @@ defmodule ExPool.Pool.State do
   It is a struct with the following fields:
 
     * `:worker_mod` - The worker module.
-    * `:size` - Size of the pool
-    * `:sup` - Pool supervisor
-    * `:workers` - List of available worker processes
-    * `:waiting` - Queue to store the waiting requests
+    * `:workers` - List of available worker processes.
+    * `:size` - Size of the pool.
+    * `:sup` - Pool supervisor.
+    * `:monitors` - Store for the monitored references.
+    * `:waiting` - Queue to store the waiting requests.
+
   """
 
   @type t :: %__MODULE__{
     worker_mod: atom,
-    size: non_neg_integer,
-    sup: pid,
     workers: [pid],
+    sup: pid,
+    size: non_neg_integer,
     monitors: :ets.tid,
     waiting: any
   }
