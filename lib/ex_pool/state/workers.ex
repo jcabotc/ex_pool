@@ -26,6 +26,14 @@ defmodule ExPool.State.Workers do
   end
 
   @doc """
+  Returns the number of available workers.
+  """
+  @spec count(State.t) :: non_neg_integer
+  def count(%{workers: workers}) do
+    length(workers)
+  end
+
+  @doc """
   Get a worker and remove it from the workers list.
   """
   @spec get(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
