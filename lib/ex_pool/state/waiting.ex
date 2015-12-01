@@ -12,6 +12,14 @@ defmodule ExPool.State.Waiting do
   end
 
   @doc """
+  Returns the number of waiting processes.
+  """
+  @spec count(State.t) :: non_neg_integer
+  def count(%{waiting: waiting}) do
+    :queue.len(waiting)
+  end
+
+  @doc """
   Adds an item to the queue.
   """
   @spec push(State.t, item :: any) :: State.t

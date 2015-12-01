@@ -10,15 +10,19 @@ defmodule ExPool.State.WaitingTest do
     {:ok, %{state: state}}
   end
 
-  test "#enqueue, #pop_from_queue", %{state: state} do
+  test "#enqueue, #count, #pop_from_queue", %{state: state} do
     assert {:empty, state} = Waiting.pop(state)
 
     state = Waiting.push(state, :from_1)
     state = Waiting.push(state, :from_2)
 
+    assert 2 = Waiting.count(state)
+
     assert {:ok, {:from_1, state}} = Waiting.pop(state)
     assert {:ok, {:from_2, state}} = Waiting.pop(state)
     assert {:empty, _state}        = Waiting.pop(state)
+
+    assert 0 = Waiting.count(state)
   end
 
   test "#remove", %{state: state} do
