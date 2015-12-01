@@ -44,4 +44,12 @@ defmodule ExPool.State do
 
     %__MODULE__{worker_mod: worker_mod, size: size}
   end
+
+  @doc """
+  Returns the size of the pool.
+  """
+  @spec size(State.t) :: non_neg_integer
+  def size(%{size: size}) do
+    size
+  end
 end
