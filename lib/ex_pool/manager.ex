@@ -37,11 +37,11 @@ defmodule ExPool.Manager do
   ```
   """
 
-  alias ExPool.Pool.State
+  alias ExPool.State
 
-  alias ExPool.Manager.Workers
-  alias ExPool.Manager.Waiting
-  alias ExPool.Manager.Monitors
+  alias ExPool.State.Workers
+  alias ExPool.State.Waiting
+  alias ExPool.State.Monitors
 
   @doc """
   Create a new pool state with the given configuration.

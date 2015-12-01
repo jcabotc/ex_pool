@@ -1,8 +1,8 @@
-defmodule ExPool.Manager.WaitingTest do
+defmodule ExPool.State.WaitingTest do
   use ExUnit.Case
 
-  alias ExPool.Pool.State
-  alias ExPool.Manager.Waiting
+  alias ExPool.State
+  alias ExPool.State.Waiting
 
   setup do
     state = %State{} |> Waiting.setup

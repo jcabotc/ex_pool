@@ -1,4 +1,4 @@
-defmodule ExPool.Pool.State do
+defmodule ExPool.State do
   @moduledoc """
   The internal state of a pool.
 

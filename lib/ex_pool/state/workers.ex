@@ -1,9 +1,9 @@
-defmodule ExPool.Manager.Workers do
+defmodule ExPool.State.Workers do
   @moduledoc """
   Manages the available workers list of the pool.
   """
 
-  alias ExPool.Manager.Workers.Supervisor, as: WorkersSupervisor
+  alias ExPool.State.Workers.Supervisor, as: WorkersSupervisor
 
   @doc """
   Starts the worker supervisor and initializes an empty workers list.

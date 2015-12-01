@@ -1,8 +1,8 @@
-defmodule ExPool.Manager.MonitorsTest do
+defmodule ExPool.State.MonitorsTest do
   use ExUnit.Case
 
-  alias ExPool.Pool.State
-  alias ExPool.Manager.Monitors
+  alias ExPool.State
+  alias ExPool.State.Monitors
 
   setup do
     state = %State{} |> Monitors.setup
