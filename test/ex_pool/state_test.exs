@@ -7,10 +7,20 @@ defmodule ExPool.StateTest do
     def start_link(_opts \\ []), do: Agent.start_link(fn -> :ok end)
   end
 
-  test "#new, #size" do
-    state = State.new(worker_mod: TestWorker, size: 10)
+  setup do
+    state = State.new(worker_mod: TestWorker, size: 2)
 
-    assert %{worker_mod: TestWorker, size: 10} = state
-    assert 10 = State.size(state)
+    {:ok, %{state: state}}
+  end
+
+  test "stash interaction", %{state: state} do
+    assert 2 = State.size(state)
+
+    assert {_worker, state}       = State.create_worker(state)
+    assert {:ok, {worker, state}} = State.get_worker(state)
+    assert 0                      = State.available_workers(state)
+
+    state = State.return_worker(state, worker)
+    assert 1 = State.available_workers(state)
   end
 end

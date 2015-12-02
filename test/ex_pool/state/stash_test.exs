@@ -1,7 +1,6 @@
 defmodule ExPool.State.StashTest do
   use ExUnit.Case
 
-  alias ExPool.State
   alias ExPool.State.Stash
 
   defmodule TestWorker do
@@ -9,25 +8,25 @@ defmodule ExPool.State.StashTest do
   end
 
   setup do
-    state = %State{worker_mod: TestWorker} |> Stash.setup
+    stash = Stash.new(worker_mod: TestWorker)
 
-    {:ok, %{state: state}}
+    {:ok, %{stash: stash}}
   end
 
-  test "#create, #length,  #get, #put", %{state: state} do
-    {_worker, state} = Stash.create(state)
-    {_worker, state} = Stash.create(state)
+  test "#create_worker, #available, #get, #put", %{stash: stash} do
+    {_worker, stash} = Stash.create_worker(stash)
+    {_worker, stash} = Stash.create_worker(stash)
 
-    assert 2 = Stash.count(state)
+    assert 2 = Stash.available(stash)
 
-    assert {:ok, {worker_1, state}}  = Stash.get(state)
-    assert {:ok, {_worker_2, state}} = Stash.get(state)
-    assert {:empty, ^state}          = Stash.get(state)
+    assert {:ok, {worker_1, stash}}  = Stash.get(stash)
+    assert {:ok, {_worker_2, stash}} = Stash.get(stash)
+    assert {:empty, ^stash}          = Stash.get(stash)
 
-    assert 0 = Stash.count(state)
+    assert 0 = Stash.available(stash)
 
-    state = Stash.put(state, worker_1)
+    stash = Stash.return(stash, worker_1)
 
-    assert {:ok, {^worker_1, _state}} = Stash.get(state)
+    assert {:ok, {^worker_1, _stash}} = Stash.get(stash)
   end
 end

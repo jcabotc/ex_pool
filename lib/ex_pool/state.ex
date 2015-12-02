@@ -4,27 +4,27 @@ defmodule ExPool.State do
 
   It is a struct with the following fields:
 
-    * `:worker_mod` - The worker module.
-    * `:workers` - List of available worker processes.
-    * `:size` - Size of the pool.
-    * `:sup` - Pool supervisor.
-    * `:monitors` - Store for the monitored references.
-    * `:waiting` - Queue to store the waiting requests.
+    * `stash` - Stash of available workers
+    * `monitors` - Store for the monitored references
+    * `waiting` - Queue to store the waiting requests
 
   """
 
-  @type t :: %__MODULE__{
-    worker_mod: atom,
-    workers: [pid],
-    sup: pid,
-    size: non_neg_integer,
-    monitors: :ets.tid,
-    waiting: any
-  }
-  defstruct [:worker_mod, :size,
-             :sup, :workers, :monitors, :waiting]
+  alias ExPool.State
+  alias ExPool.State.Stash
 
-  @default_size 5
+  @type stash  :: Stash.t
+  @type worker :: Stash.worker
+
+  @type t :: %__MODULE__{
+    stash:    stash,
+    monitors: :ets.tid,
+    waiting:  any
+  }
+
+  defstruct stash:  nil,
+            monitors: nil,
+            waiting:  nil
 
   @doc """
   Creates a new pool state with the given configuration.
@@ -34,22 +34,54 @@ defmodule ExPool.State do
     * `:worker_mod` - (Required) The worker module. It has to fit in a
     supervision tree (like a GenServer).
 
-    * `:size` - (Optional) The size of the pool (default #{@default_size}).
+    * `:size` - (Optional) The size of the pool (default 5).
 
   """
-  @spec new(config :: [Keyword]) :: State.t
+  @spec new(config :: [Keyword]) :: t
   def new(config) do
-    worker_mod = Keyword.fetch!(config, :worker_mod)
-    size       = Keyword.get(config, :size, @default_size)
+    stash = Stash.new(config)
 
-    %__MODULE__{worker_mod: worker_mod, size: size}
+    %State{stash: stash}
   end
+
+  ## Stash
 
   @doc """
   Returns the size of the pool.
   """
-  @spec size(State.t) :: non_neg_integer
-  def size(%{size: size}) do
-    size
+  @spec size(t) :: non_neg_integer
+  def size(%State{stash: stash}), do: Stash.size(stash)
+
+  @doc """
+  Returns the number of available workers on the pool.
+  """
+  @spec available_workers(t) :: non_neg_integer
+  def available_workers(%State{stash: stash}), do: Stash.available(stash)
+
+  @doc """
+  Creates a new available worker.
+  """
+  @spec create_worker(t) :: {worker, t}
+  def create_worker(%State{stash: stash} = state) do
+    {worker, new_stash} = Stash.create_worker(stash)
+    {worker, %{state|stash: new_stash}}
   end
+
+  @doc """
+  Get a worker and remove it from the workers list.
+  """
+  @spec get_worker(t) :: {:ok, {worker, t}} | {:empty, t}
+  def get_worker(%State{stash: stash} = state) do
+    case Stash.get(stash) do
+      {:ok, {worker, new_stash}} -> {:ok, {worker, %{state|stash: new_stash}}}
+      {:empty, _stash}           -> {:empty, state}
+    end
+  end
+
+  @doc """
+  Add a worker to the workers list.
+  """
+  @spec return_worker(t, worker) :: t
+  def return_worker(%State{stash: stash} = state, worker),
+    do: %{state|stash: Stash.return(stash, worker)}
 end

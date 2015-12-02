@@ -3,52 +3,75 @@ defmodule ExPool.State.Stash do
   Manages the available workers list of the pool.
   """
 
+  @type worker :: pid
+
+  @type sup     :: pid
+  @type workers :: [worker]
+  @type size    :: non_neg_integer
+
+  @type t :: %__MODULE__{
+    sup:     sup,
+    workers: workers,
+    size:    size
+  }
+
+  defstruct sup:     nil,
+            workers: [],
+            size:    0
+
+  @default_size 5
+
+  alias ExPool.State.Stash
   alias ExPool.State.Stash.Supervisor, as: StashSupervisor
 
   @doc """
-  Starts the worker supervisor and initializes an empty workers list.
+  Builds a new Stash struct with the given configuration
   """
-  @spec setup(State.t) :: State.t
-  def setup(%{worker_mod: worker_mod} = state) do
+  @spec new(config :: [Keyword]) :: t
+  def new(config) do
+    worker_mod = Keyword.fetch!(config, :worker_mod)
+    size       = Keyword.get(config, :size, @default_size)
+
     {:ok, sup} = StashSupervisor.start_link(worker_mod)
 
-    %{state | sup: sup, workers: []}
+    %Stash{sup: sup, size: size}
   end
 
   @doc """
-  Creates a new worker.
+  Returns the total number of workers
   """
-  @spec create(State.t) :: {pid, State.t}
-  def create(%{workers: workers, sup: sup} = state) do
-    {:ok, worker} = StashSupervisor.start_child(sup)
-
-    {worker, %{state | workers: [worker|workers]}}
-  end
+  @spec size(t) :: non_neg_integer
+  def size(%Stash{size: size}), do: size
 
   @doc """
   Returns the number of available workers.
   """
-  @spec count(State.t) :: non_neg_integer
-  def count(%{workers: workers}) do
-    length(workers)
+  @spec available(t) :: non_neg_integer
+  def available(%Stash{workers: workers}), do: length(workers)
+
+  @doc """
+  Creates a new worker.
+  """
+  @spec create_worker(t) :: {worker, t}
+  def create_worker(%Stash{sup: sup, workers: workers} = stash) do
+    {:ok, worker} = StashSupervisor.start_child(sup)
+
+    {worker, %{stash | workers: [worker|workers]}}
   end
 
   @doc """
   Get a worker and remove it from the workers list.
   """
-  @spec get(State.t) :: {:ok, {pid, State.t}} | {:empty, State.t}
-  def get(%{workers: []} = state) do
-    {:empty, state}
-  end
-  def get(%{workers: [worker|rest]} = state) do
-    {:ok, {worker, %{state | workers: rest}}}
-  end
+  @spec get(t) :: {:ok, {worker, t}} | {:empty, t}
+  def get(%Stash{workers: []} = stash),
+    do: {:empty, stash}
+  def get(%Stash{workers: [worker|rest]} = stash),
+    do: {:ok, {worker, %{stash | workers: rest}}}
 
   @doc """
   Add a worker to the workers list.
   """
-  @spec put(State.t, pid) :: State.t
-  def put(%{workers: workers} = state, worker) do
-    %{state | workers: [worker|workers]}
-  end
+  @spec return(t, worker) :: t
+  def return(%Stash{workers: workers} = stash, worker),
+    do: %{stash | workers: [worker|workers]}
 end
