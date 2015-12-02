@@ -11,14 +11,20 @@ defmodule ExPool.State do
   """
 
   alias ExPool.State
+
   alias ExPool.State.Stash
+  alias ExPool.State.Monitors
 
   @type stash  :: Stash.t
   @type worker :: Stash.worker
 
+  @type monitors :: Monitors.t
+  @type item     :: Monitors.item
+  @type ref      :: Monitors.ref
+
   @type t :: %__MODULE__{
     stash:    stash,
-    monitors: :ets.tid,
+    monitors: monitors,
     waiting:  any
   }
 
@@ -39,9 +45,10 @@ defmodule ExPool.State do
   """
   @spec new(config :: [Keyword]) :: t
   def new(config) do
-    stash = Stash.new(config)
+    stash    = Stash.new(config)
+    monitors = Monitors.new(config)
 
-    %State{stash: stash}
+    %State{stash: stash, monitors: monitors}
   end
 
   ## Stash
@@ -84,4 +91,38 @@ defmodule ExPool.State do
   @spec return_worker(t, worker) :: t
   def return_worker(%State{stash: stash} = state, worker),
     do: %{state|stash: Stash.return(stash, worker)}
+
+  ## Monitors
+
+  @doc """
+  Stores the given item and its associated reference.
+  """
+  @spec add_monitor(t, item, ref) :: t
+  def add_monitor(%State{monitors: monitors} = state, item, ref) do
+    monitors = Monitors.add(monitors, item, ref)
+    %{state|monitors: monitors}
+  end
+
+  @doc """
+  Gets an item from its reference.
+  """
+  @spec item_from_ref(t, ref) :: {:ok, item} | :not_found
+  def item_from_ref(%State{monitors: monitors}, ref),
+    do: Monitors.item_from_ref(monitors, ref)
+
+  @doc """
+  Gets a reference from its item.
+  """
+  @spec ref_from_item(t, item) :: {:ok, ref} | :not_found
+  def ref_from_item(%State{monitors: monitors}, item),
+    do: Monitors.ref_from_item(monitors, item)
+
+  @doc """
+  Removes the given item and its associated reference.
+  """
+  @spec remove_monitor(t, item) :: t
+  def remove_monitor(%State{monitors: monitors} = state, item) do
+    monitors = Monitors.forget(monitors, item)
+    %{state|monitors: monitors}
+  end
 end

@@ -3,41 +3,55 @@ defmodule ExPool.State.Monitors do
   Manages the queue of waiting requests of the pool.
   """
 
+  @type item :: any
+  @type ref  :: reference
+
+  @type table :: :ets.tid
+
+  @type t :: %__MODULE__{
+    table: table
+  }
+
+  defstruct table: nil
+
+  alias ExPool.State.Monitors
+
   @doc """
-  Creates an empty queue
+  Creates a new Monitors struct.
   """
-  @spec setup(State.t) :: State.t
-  def setup(state) do
-    %{state | monitors: :ets.new(:monitors, [:private])}
+  @spec new(config :: [Keyword]) :: t
+  def new(_config) do
+    table = :ets.new(:monitors, [:private])
+
+    %Monitors{table: table}
   end
 
   @doc """
-  Adds the given item and its associated reference
+  Adds the given item and its associated reference.
   """
-  @spec add(State.t, item :: any, reference) :: State.t
-  def add(%{monitors: monitors} = state, item, ref) do
-    :ets.insert(monitors, {item, ref})
-
-    state
+  @spec add(t, item, ref) :: t
+  def add(%Monitors{table: table} = monitors, item, ref) do
+    :ets.insert(table, {item, ref})
+    monitors
   end
 
   @doc """
-  Gets an item from its reference
+  Gets an item from its reference.
   """
-  @spec item_from_ref(State.t, reference) :: {:ok, item :: any} | :not_found
-  def item_from_ref(%{monitors: monitors}, ref) do
-    case :ets.match(monitors, {:"$1", ref}) do
+  @spec item_from_ref(t, ref) :: {:ok, item} | :not_found
+  def item_from_ref(%Monitors{table: table}, ref) do
+    case :ets.match(table, {:"$1", ref}) do
       [[item]] -> {:ok, item}
       []       -> :not_found
     end
   end
 
   @doc """
-  Gets a reference from its item
+  Gets a reference from its item.
   """
-  @spec ref_from_item(State.t, item :: any) :: {:ok, reference} | :not_found
-  def ref_from_item(%{monitors: monitors}, item) do
-    case :ets.lookup(monitors, item) do
+  @spec ref_from_item(t, item) :: {:ok, ref} | :not_found
+  def ref_from_item(%Monitors{table: table}, item) do
+    case :ets.lookup(table, item) do
       [{^item, ref}] -> {:ok, ref}
       []             -> :not_found
     end
@@ -46,10 +60,9 @@ defmodule ExPool.State.Monitors do
   @doc """
   Removes the given item and its associated reference
   """
-  @spec forget(State.t, item :: any) :: State.t
-  def forget(%{monitors: monitors} = state, item) do
-    :ets.delete(monitors, item)
-
-    state
+  @spec forget(t, item) :: t
+  def forget(%Monitors{table: table} = monitors, item) do
+    :ets.delete(table, item)
+    monitors
   end
 end
