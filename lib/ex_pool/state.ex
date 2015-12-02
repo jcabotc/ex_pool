@@ -6,7 +6,7 @@ defmodule ExPool.State do
 
     * `stash` - Stash of available workers
     * `monitors` - Store for the monitored references
-    * `waiting` - Queue to store the waiting requests
+    * `queue` - Queue to store the waiting requests
 
   """
 
@@ -14,6 +14,7 @@ defmodule ExPool.State do
 
   alias ExPool.State.Stash
   alias ExPool.State.Monitors
+  alias ExPool.State.Queue
 
   @type stash  :: Stash.t
   @type worker :: Stash.worker
@@ -22,15 +23,17 @@ defmodule ExPool.State do
   @type item     :: Monitors.item
   @type ref      :: Monitors.ref
 
+  @type queue :: Queue.t
+
   @type t :: %__MODULE__{
     stash:    stash,
     monitors: monitors,
-    waiting:  any
+    queue:    queue
   }
 
-  defstruct stash:  nil,
+  defstruct stash:    nil,
             monitors: nil,
-            waiting:  nil
+            queue:    nil
 
   @doc """
   Creates a new pool state with the given configuration.
@@ -47,8 +50,9 @@ defmodule ExPool.State do
   def new(config) do
     stash    = Stash.new(config)
     monitors = Monitors.new(config)
+    queue    = Queue.new(config)
 
-    %State{stash: stash, monitors: monitors}
+    %State{stash: stash, monitors: monitors, queue: queue}
   end
 
   ## Stash
@@ -124,5 +128,38 @@ defmodule ExPool.State do
   def remove_monitor(%State{monitors: monitors} = state, item) do
     monitors = Monitors.forget(monitors, item)
     %{state|monitors: monitors}
+  end
+
+  ## Queue
+
+  @doc """
+  Returns the number of waiting processes.
+  """
+  @spec queue_size(t) :: non_neg_integer
+  def queue_size(%State{queue: queue}), do: Queue.size(queue)
+
+  @doc """
+  Adds an item to the queue.
+  """
+  @spec enqueue(t, item) :: t
+  def enqueue(%State{queue: queue} = state, item),
+    do: %{state|queue: Queue.push(queue, item)}
+
+  @doc """
+  Removes an item from the queue.
+  """
+  @spec keep_on_queue(t, (item -> boolean)) :: t
+  def keep_on_queue(%State{queue: queue} = state, filter),
+    do: %{state|queue: Queue.keep(queue, filter)}
+
+  @doc """
+  Pops an item from the queue.
+  """
+  @spec pop_from_queue(t) :: {:ok, {item, t}} | {:empty, t}
+  def pop_from_queue(%State{queue: queue} = state) do
+    case Queue.pop(queue) do
+      {:ok, {item, new_queue}} -> {:ok, {item, %{state|queue: new_queue}}}
+      {:empty, _queue}         -> {:empty, state}
+    end
   end
 end

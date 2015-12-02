@@ -1,38 +1,37 @@
 defmodule ExPool.State.QueueTest do
   use ExUnit.Case
 
-  alias ExPool.State
   alias ExPool.State.Queue
 
   setup do
-    state = %State{} |> Queue.setup
+    queue = Queue.new([])
 
-    {:ok, %{state: state}}
+    {:ok, %{queue: queue}}
   end
 
-  test "#enqueue, #count, #pop_from_queue", %{state: state} do
-    assert {:empty, state} = Queue.pop(state)
+  test "#push, #pop, #size", %{queue: queue} do
+    assert {:empty, queue} = Queue.pop(queue)
 
-    state = Queue.push(state, :from_1)
-    state = Queue.push(state, :from_2)
+    queue = Queue.push(queue, :from_1)
+    queue = Queue.push(queue, :from_2)
 
-    assert 2 = Queue.count(state)
+    assert 2 = Queue.size(queue)
 
-    assert {:ok, {:from_1, state}} = Queue.pop(state)
-    assert {:ok, {:from_2, state}} = Queue.pop(state)
-    assert {:empty, _state}        = Queue.pop(state)
+    assert {:ok, {:from_1, queue}} = Queue.pop(queue)
+    assert {:ok, {:from_2, queue}} = Queue.pop(queue)
+    assert {:empty, _state}        = Queue.pop(queue)
 
-    assert 0 = Queue.count(state)
+    assert 0 = Queue.size(queue)
   end
 
-  test "#remove", %{state: state} do
-    state = state
+  test "#keep", %{queue: queue} do
+    queue = queue
             |> Queue.push(:from_1)
             |> Queue.push(:from_2)
             |> Queue.push(:from_1)
             |> Queue.keep(&(&1 != :from_1))
 
-    assert {:ok, {:from_2, state}} = Queue.pop(state)
-    assert {:empty, _state}        = Queue.pop(state)
+    assert {:ok, {:from_2, queue}} = Queue.pop(queue)
+    assert {:empty, _state}        = Queue.pop(queue)
   end
 end

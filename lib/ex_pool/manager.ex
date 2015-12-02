@@ -38,7 +38,6 @@ defmodule ExPool.Manager do
   """
 
   alias ExPool.State
-  alias ExPool.State.Queue
 
   @doc """
   Create a new pool state with the given configuration.
@@ -48,7 +47,6 @@ defmodule ExPool.Manager do
   def new(config) do
     config
     |> State.new
-    |> Queue.setup
     |> prepopulate
   end
 
@@ -89,7 +87,7 @@ defmodule ExPool.Manager do
 
     new_state = state
                 |> State.add_monitor({:waiting, pid}, ref)
-                |> Queue.push(from)
+                |> State.enqueue(from)
 
     {:waiting, new_state}
   end
@@ -111,7 +109,7 @@ defmodule ExPool.Manager do
   @spec check_in(State.t, pid) ::
     {:ok, State.t} | {:check_out, {from :: any, worker :: pid, State.t}}
   def check_in(state, worker) do
-    Queue.pop(state) |> handle_check_in(worker)
+    State.pop_from_queue(state) |> handle_check_in(worker)
   end
 
   def handle_check_in({:ok, {{pid, _} = from, state}}, worker) do
@@ -167,7 +165,7 @@ defmodule ExPool.Manager do
   defp handle_process_down({:ok, {:waiting, pid}}, state) do
     state
     |> State.remove_monitor({:waiting, pid})
-    |> Queue.keep fn {waiting_pid, _ref} ->
+    |> State.keep_on_queue fn {waiting_pid, _ref} ->
          waiting_pid != pid
        end
   end

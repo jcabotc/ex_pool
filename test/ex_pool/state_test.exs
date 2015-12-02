@@ -42,4 +42,18 @@ defmodule ExPool.StateTest do
     assert :not_found = State.item_from_ref(state, ref)
     assert :not_found = State.item_from_ref(state, item)
   end
+
+  test "queue", %{state: state} do
+    item_1 = :an_item
+    item_2 = :another_item
+
+    state = State.enqueue(state, item_1)
+    state = State.enqueue(state, item_2)
+    assert 2 = State.queue_size(state)
+
+    state = State.keep_on_queue(state, &(&1 == :an_item))
+    assert 1 = State.queue_size(state)
+
+    assert {:ok, {:an_item, _state}} = State.pop_from_queue(state)
+  end
 end

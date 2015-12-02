@@ -3,46 +3,55 @@ defmodule ExPool.State.Queue do
   Manages the queue of waiting requests of the pool.
   """
 
+  @type item  :: any
+  @type items :: :queue.queue
+
+  @type t :: %__MODULE__{
+    items: items
+  }
+
+  defstruct items: nil
+
+  alias ExPool.State.Queue
+
   @doc """
-  Creates an empty queue.
+  Builds a new queue.
   """
-  @spec setup(State.t) :: State.t
-  def setup(state) do
-    %{state | waiting: :queue.new}
+  @spec new(config :: [Keyword]) :: t
+  def new(_config) do
+    items = :queue.new
+
+    %Queue{items: items}
   end
 
   @doc """
   Returns the number of waiting processes.
   """
-  @spec count(State.t) :: non_neg_integer
-  def count(%{waiting: waiting}) do
-    :queue.len(waiting)
-  end
+  @spec size(t) :: non_neg_integer
+  def size(%Queue{items: items}), do: :queue.len(items)
 
   @doc """
   Adds an item to the queue.
   """
-  @spec push(State.t, item :: any) :: State.t
-  def push(%{waiting: waiting} = state, item) do
-    %{state | waiting: :queue.in(item, waiting)}
-  end
+  @spec push(t, item) :: t
+  def push(%Queue{items: items} = queue, item),
+    do: %{queue|items: :queue.in(item, items)}
 
   @doc """
   Removes an item from the queue.
   """
-  def keep(%{waiting: waiting} = state, filter) do
-    %{state | waiting: :queue.filter(filter, waiting)}
-  end
+  @spec keep(t, (item -> boolean)) :: t
+  def keep(%Queue{items: items} = queue, filter),
+    do: %{queue|items: :queue.filter(filter, items)}
 
   @doc """
   Pops an item from the queue.
   """
-  @spec pop(State.t) :: {:ok, {item :: any, State.t}} | {:empty, State.t}
-  def pop(%{waiting: waiting} = state) do
-    case :queue.out(waiting) do
-      {{:value, item}, new_waiting} -> {:ok, {item, %{state | waiting: new_waiting}}}
-      {:empty, _queue}              -> {:empty, state}
+  @spec pop(t) :: {:ok, {item, t}} | {:empty, t}
+  def pop(%Queue{items: items} = queue) do
+    case :queue.out(items) do
+      {{:value, item}, new_items} -> {:ok, {item, %{queue|items: new_items}}}
+      {:empty, _queue}            -> {:empty, queue}
     end
   end
-
 end
