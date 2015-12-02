@@ -1,13 +1,12 @@
 defmodule ExPool.State.MonitorsTest do
   use ExUnit.Case
 
-  alias ExPool.State
   alias ExPool.State.Monitors
 
   setup do
-    state = %State{} |> Monitors.setup
+    monitors = Monitors.new([])
 
-    {:ok, %{state: state}}
+    {:ok, %{monitors: monitors}}
   end
 
   def new_pid do
@@ -15,20 +14,20 @@ defmodule ExPool.State.MonitorsTest do
     pid
   end
 
-  test "#add, #item_from_ref, #forget", %{state: state} do
+  test "#add, #item_from_ref, #forget", %{monitors: monitors} do
     worker = new_pid
 
-    state  = Monitors.add(state, {:worker, worker}, :ref_1)
-    state  = Monitors.add(state, {:in_use, worker}, :ref_2)
+    monitors = Monitors.add(monitors, {:worker, worker}, :ref_1)
+    monitors = Monitors.add(monitors, {:in_use, worker}, :ref_2)
 
-    assert {:ok, {:in_use, ^worker}} = Monitors.item_from_ref(state, :ref_2)
-    assert {:ok, {:worker, ^worker}} = Monitors.item_from_ref(state, :ref_1)
+    assert {:ok, {:in_use, ^worker}} = Monitors.item_from_ref(monitors, :ref_2)
+    assert {:ok, {:worker, ^worker}} = Monitors.item_from_ref(monitors, :ref_1)
 
-    assert {:ok, :ref_2} = Monitors.ref_from_item(state, {:in_use, worker})
-    assert {:ok, :ref_1} = Monitors.ref_from_item(state, {:worker, worker})
+    assert {:ok, :ref_2} = Monitors.ref_from_item(monitors, {:in_use, worker})
+    assert {:ok, :ref_1} = Monitors.ref_from_item(monitors, {:worker, worker})
 
-    state = Monitors.forget(state, {:in_use, worker})
-    assert :not_found = Monitors.item_from_ref(state, :ref_2)
-    assert :not_found = Monitors.ref_from_item(state, {:in_use, worker})
+    monitors = Monitors.forget(monitors, {:in_use, worker})
+    assert :not_found = Monitors.item_from_ref(monitors, :ref_2)
+    assert :not_found = Monitors.ref_from_item(monitors, {:in_use, worker})
   end
 end
