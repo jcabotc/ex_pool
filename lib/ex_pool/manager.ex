@@ -39,7 +39,7 @@ defmodule ExPool.Manager do
 
   alias ExPool.State
 
-  alias ExPool.State.Workers
+  alias ExPool.State.Stash
   alias ExPool.State.Waiting
   alias ExPool.State.Monitors
 
@@ -51,7 +51,7 @@ defmodule ExPool.Manager do
   def new(config) do
     config
     |> State.new
-    |> Workers.setup
+    |> Stash.setup
     |> Waiting.setup
     |> Monitors.setup
     |> prepopulate
@@ -63,7 +63,7 @@ defmodule ExPool.Manager do
 
   defp prepopulate(state, 0), do: state
   defp prepopulate(state, remaining) do
-    {worker, state} = Workers.create(state)
+    {worker, state} = Stash.create(state)
     ref             = Process.monitor(worker)
 
     state |> Monitors.add({:worker, worker}, ref) |> prepopulate(remaining - 1)
@@ -78,7 +78,7 @@ defmodule ExPool.Manager do
   """
   @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:empty, State.t}
   def check_out(state, from) do
-    Workers.get(state) |> handle_check_out(from)
+    Stash.get(state) |> handle_check_out(from)
   end
 
   defp handle_check_out({:ok, {worker, state}}, {pid, _ref}) do
@@ -134,7 +134,7 @@ defmodule ExPool.Manager do
 
     new_state = state
                 |> Monitors.forget({:in_use, worker})
-                |> Workers.put(worker)
+                |> Stash.put(worker)
 
     {:ok, new_state}
   end
@@ -159,7 +159,7 @@ defmodule ExPool.Manager do
   defp handle_process_down({:ok, {:worker, worker}}, state) do
     {new_worker, state} = state
                         |> Monitors.forget({:worker, worker})
-                        |> Workers.create
+                        |> Stash.create
 
     ref = Process.monitor(new_worker)
     state |> Monitors.add({:worker, new_worker}, ref)
@@ -167,7 +167,7 @@ defmodule ExPool.Manager do
   defp handle_process_down({:ok, {:in_use, worker}}, state) do
     state
     |> Monitors.forget({:in_use, worker})
-    |> Workers.put(worker)
+    |> Stash.put(worker)
   end
   defp handle_process_down({:ok, {:waiting, pid}}, state) do
     state

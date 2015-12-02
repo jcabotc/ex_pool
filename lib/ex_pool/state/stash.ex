@@ -1,16 +1,16 @@
-defmodule ExPool.State.Workers do
+defmodule ExPool.State.Stash do
   @moduledoc """
   Manages the available workers list of the pool.
   """
 
-  alias ExPool.State.Workers.Supervisor, as: WorkersSupervisor
+  alias ExPool.State.Stash.Supervisor, as: StashSupervisor
 
   @doc """
   Starts the worker supervisor and initializes an empty workers list.
   """
   @spec setup(State.t) :: State.t
   def setup(%{worker_mod: worker_mod} = state) do
-    {:ok, sup} = WorkersSupervisor.start_link(worker_mod)
+    {:ok, sup} = StashSupervisor.start_link(worker_mod)
 
     %{state | sup: sup, workers: []}
   end
@@ -20,7 +20,7 @@ defmodule ExPool.State.Workers do
   """
   @spec create(State.t) :: {pid, State.t}
   def create(%{workers: workers, sup: sup} = state) do
-    {:ok, worker} = WorkersSupervisor.start_child(sup)
+    {:ok, worker} = StashSupervisor.start_child(sup)
 
     {worker, %{state | workers: [worker|workers]}}
   end
