@@ -1,8 +1,11 @@
 defmodule ExPool.State do
   @moduledoc """
-  The internal state of a pool.
+  The internal state of the pool.
 
-  It is a struct with the following fields:
+  This module defines a `ExPool.State` struct and the main functions
+  for working with pool internal state.
+
+  ## Fields
 
     * `stash` - Stash of available workers
     * `monitors` - Store for the monitored references
@@ -58,19 +61,19 @@ defmodule ExPool.State do
   ## Stash
 
   @doc """
-  Returns the size of the pool.
+  Returns the total number of workers.
   """
   @spec size(t) :: non_neg_integer
   def size(%State{stash: stash}), do: Stash.size(stash)
 
   @doc """
-  Returns the number of available workers on the pool.
+  Returns the number of available workers.
   """
   @spec available_workers(t) :: non_neg_integer
   def available_workers(%State{stash: stash}), do: Stash.available(stash)
 
   @doc """
-  Creates a new available worker.
+  Creates a new worker.
   """
   @spec create_worker(t) :: {worker, t}
   def create_worker(%State{stash: stash} = state) do
@@ -79,7 +82,7 @@ defmodule ExPool.State do
   end
 
   @doc """
-  Get a worker and remove it from the workers list.
+  Gets a worker from the pool if there is any available.
   """
   @spec get_worker(t) :: {:ok, {worker, t}} | {:empty, t}
   def get_worker(%State{stash: stash} = state) do
@@ -90,7 +93,7 @@ defmodule ExPool.State do
   end
 
   @doc """
-  Add a worker to the workers list.
+  Returns a worker to the pool.
   """
   @spec return_worker(t, worker) :: t
   def return_worker(%State{stash: stash} = state, worker),
@@ -146,7 +149,7 @@ defmodule ExPool.State do
     do: %{state|queue: Queue.push(queue, item)}
 
   @doc """
-  Removes an item from the queue.
+  Keeps on the queue only items for those the function is true.
   """
   @spec keep_on_queue(t, (item -> boolean)) :: t
   def keep_on_queue(%State{queue: queue} = state, filter),

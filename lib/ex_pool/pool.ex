@@ -20,9 +20,9 @@ defmodule ExPool.Pool do
   ```
   """
 
-  alias ExPool.Manager
-
   use GenServer
+
+  alias ExPool.Manager
 
   @doc """
   Starts a new pool GenServer.
