@@ -1,6 +1,15 @@
 defmodule ExPool.State.Monitors do
   @moduledoc """
-  Manages the queue of waiting requests of the pool.
+  Data structure to store references to all processes related to the
+  pool and the role they play.
+
+  This module defines a `ExPool.State.Monitors` struct and the main functions
+  to manipulate it.
+
+  ## Fields
+
+    * `table` - ets table to store all role, process and reference relations
+
   """
 
   @type item :: any

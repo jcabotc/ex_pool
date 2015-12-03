@@ -7,9 +7,9 @@ defmodule ExPool.State do
 
   ## Fields
 
-    * `stash` - Stash of available workers
-    * `monitors` - Store for the monitored references
-    * `queue` - Queue to store the waiting requests
+    * `stash` - stash of available workers
+    * `monitors` - store for the monitored references
+    * `queue` - queue to store the waiting requests
 
   """
 
@@ -64,7 +64,7 @@ defmodule ExPool.State do
   Returns the total number of workers.
   """
   @spec size(t) :: non_neg_integer
-  def size(%State{stash: stash}), do: Stash.size(stash)
+  def size(%State{stash: stash}), do: stash.size
 
   @doc """
   Returns the number of available workers.

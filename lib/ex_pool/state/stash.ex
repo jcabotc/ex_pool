@@ -1,6 +1,16 @@
 defmodule ExPool.State.Stash do
   @moduledoc """
-  Manages the available workers list of the pool.
+  A stash of workers.
+
+  This module defines a `ExPool.State.Stash` struct and the main functions
+  to manage workers in a pool.
+
+  ## Fields
+
+    * `sup` - simple_one_for_one supervisor to start and supervise workers
+    * `workers` - list of available workers
+    * `size` - total number of workers
+
   """
 
   @type worker :: pid
@@ -25,7 +35,13 @@ defmodule ExPool.State.Stash do
   alias ExPool.State.Stash.Supervisor, as: StashSupervisor
 
   @doc """
-  Builds a new Stash struct with the given configuration
+  Builds a new Stash struct with the given configuration.
+
+  ## Configuration options
+
+    * `:worker_mod` - (Required) worker module that fits on a supervision tree
+    * `:size` - (Optional) number of workers on the pool (default 5).
+
   """
   @spec new(config :: [Keyword]) :: t
   def new(config) do
@@ -36,12 +52,6 @@ defmodule ExPool.State.Stash do
 
     %Stash{sup: sup, size: size}
   end
-
-  @doc """
-  Returns the total number of workers
-  """
-  @spec size(t) :: non_neg_integer
-  def size(%Stash{size: size}), do: size
 
   @doc """
   Returns the number of available workers.
