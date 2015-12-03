@@ -42,16 +42,33 @@ defmodule ExPool do
 
   ## Options:
 
-    * :worker_mod - (Required) Worker module for the pool.
-
-    * :size - (Optional) Size of the pool (default 5).
-
-    * :name - (Optional) Name of the pool GenServer.
+    * :worker_mod - (Required) worker module for the pool
+    * :size - (Optional) size of the pool (default 5)
+    * :name - (Optional) name of the pool GenServer
 
   """
   @spec start_link(opts :: [Keyword]) :: Supervisor.on_start
   def start_link(opts \\ []) do
     Pool.start_link(opts)
+  end
+
+  @doc """
+  Returns information about the current state of the pool.
+
+  ## Format:
+
+    %{
+      workers: %{
+        free: <number_of_available_workers>,
+        in_use: <number_of_workers_in_use>,
+        total: <total_number_of_workers>
+      },
+      waiting: <number_of_processes_waiting_for_an_available_worker>
+    }
+  """
+  @spec info(pool :: pid) :: map
+  def info(pool) do
+    Pool.info(pool)
   end
 
   @doc """

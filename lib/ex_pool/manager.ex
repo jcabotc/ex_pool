@@ -63,6 +63,36 @@ defmodule ExPool.Manager do
   end
 
   @doc """
+  Gathers information about the current state of the pool.
+
+  ## Format:
+
+    %{
+      workers: %{
+        free: <number_of_available_workers>,
+        in_use: <number_of_workers_in_use>,
+        total: <total_number_of_workers>
+      },
+      waiting: <number_of_processes_waiting_for_an_available_worker>
+    }
+  """
+  @spec info(State.t) :: map
+  def info(state) do
+    %{
+      workers: workers_info(state),
+      waiting: State.queue_size(state)
+    }
+  end
+
+  defp workers_info(state) do
+    total  = State.size(state)
+    free   = State.available_workers(state)
+    in_use = total - free
+
+    %{total: total, in_use: in_use, free: free}
+  end
+
+  @doc """
   Check-out a worker from the pool.
 
   It receives the state, and a term to identify the current check-out

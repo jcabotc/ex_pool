@@ -18,11 +18,14 @@ defmodule ExPool.ManagerTest do
     pid
   end
 
-  test "#check_in and #check_out", %{state: state} do
+  test "#check_in, #check_out, #info", %{state: state} do
     {pid_1, pid_2} = {new_pid, new_pid}
 
     assert {:ok, {worker_1, state}} = Manager.check_out(state, {pid_1, :ref_1})
     assert {:waiting, state}        = Manager.check_out(state, {pid_2, :ref_2})
+
+    expected_info = %{workers: %{total: 1, in_use: 1, free: 0}, waiting: 1}
+    assert expected_info == Manager.info(state)
 
     assert {:check_out, {{^pid_2, :ref_2}, ^worker_1, state}} = Manager.check_in(state, worker_1)
     assert {:ok, _state}                                      = Manager.check_in(state, worker_1)

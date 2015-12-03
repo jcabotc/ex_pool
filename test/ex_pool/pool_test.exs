@@ -25,6 +25,9 @@ defmodule ExPool.PoolTest do
 
     refute_receive {:checked_out, _worker}
 
+    expected_info = %{workers: %{total: 2, in_use: 2, free: 0}, waiting: 1}
+    assert expected_info == Pool.info(pool)
+
     assert :ok = Pool.check_in(pool, worker_2)
     assert_receive {:checked_out, ^worker_2}
 

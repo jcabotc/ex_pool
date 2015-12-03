@@ -44,6 +44,14 @@ defmodule ExPool.Pool do
   end
 
   @doc """
+  Get information about the current state of the pool.
+  """
+  @spec info(pool :: pid) :: map
+  def info(pool) do
+    GenServer.call(pool, :info)
+  end
+
+  @doc """
   Retrieve a worker from the pool.
 
   If there aren't any available workers it blocks until one is available.
@@ -74,6 +82,13 @@ defmodule ExPool.Pool do
       {:ok, {worker, new_state}} -> {:reply, worker, new_state}
       {:waiting, new_state}      -> {:noreply, new_state}
     end
+  end
+
+  @doc false
+  def handle_call(:info, _from, state) do
+    info = Manager.info(state)
+
+    {:reply, info, state}
   end
 
   @doc false
