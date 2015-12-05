@@ -16,11 +16,14 @@ defmodule ExPool.State do
   alias ExPool.State
 
   alias ExPool.State.Config
+  alias ExPool.State.Factory
   alias ExPool.State.Stash
   alias ExPool.State.Monitors
   alias ExPool.State.Queue
 
   @type config :: Config.t
+
+  @type factory :: Factory.t
 
   @type stash  :: Stash.t
   @type worker :: Stash.worker
@@ -33,12 +36,14 @@ defmodule ExPool.State do
 
   @type t :: %__MODULE__{
     config:   config,
+    factory:  factory,
     stash:    stash,
     monitors: monitors,
     queue:    queue
   }
 
   defstruct config:   nil,
+            factory:  nil,
             stash:    nil,
             monitors: nil,
             queue:    nil
@@ -56,15 +61,16 @@ defmodule ExPool.State do
   """
   @spec new(opts :: [Keyword]) :: t
   def new(opts) do
-    config   = Config.new(opts)
-    stash    = Stash.new(opts)
-    monitors = Monitors.new(opts)
-    queue    = Queue.new(opts)
-
-    %State{config: config, stash: stash, monitors: monitors, queue: queue}
+    %State{
+      config:   Config.new(opts),
+      factory:  Factory.new(opts),
+      stash:    Stash.new(opts),
+      monitors: Monitors.new(opts),
+      queue:    Queue.new(opts)
+    }
   end
 
-  ## Stash
+  ## Config
 
   @doc """
   Returns the total number of workers.
@@ -72,20 +78,32 @@ defmodule ExPool.State do
   @spec size(t) :: non_neg_integer
   def size(%State{config: config}), do: config.size
 
+  ## Factory
+
+  @spec create_worker(t) :: {worker, t}
+  def create_worker(%State{factory: factory} = state) do
+    {worker, factory} = Factory.create(factory)
+    {worker, %{state|factory: factory}}
+  end
+
+  @spec total_workers(t) :: non_neg_integer
+  def total_workers(%State{factory: factory}), do: factory.total
+
+  @spec destroy_worker(t, worker) :: t
+  def destroy_worker(%State{factory: factory} = state, worker),
+    do: %{state|factory: Factory.destroy(factory, worker)}
+
+  @spec report_dead_worker(t) :: t
+  def report_dead_worker(%State{factory: factory} = state),
+    do: %{state|factory: Factory.report_death(factory)}
+
+  ## Stash
+
   @doc """
   Returns the number of available workers.
   """
   @spec available_workers(t) :: non_neg_integer
   def available_workers(%State{stash: stash}), do: Stash.available(stash)
-
-  @doc """
-  Creates a new worker.
-  """
-  @spec create_worker(t) :: {worker, t}
-  def create_worker(%State{stash: stash} = state) do
-    {worker, new_stash} = Stash.create_worker(stash)
-    {worker, %{state|stash: new_stash}}
-  end
 
   @doc """
   Gets a worker from the pool if there is any available.

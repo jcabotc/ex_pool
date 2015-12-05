@@ -57,6 +57,7 @@ defmodule ExPool.Manager do
   defp prepopulate(state, 0), do: state
   defp prepopulate(state, remaining) do
     {worker, state} = State.create_worker(state)
+    state           = State.return_worker(state, worker)
     ref             = Process.monitor(worker)
 
     state |> State.add_monitor({:worker, worker}, ref) |> prepopulate(remaining - 1)
@@ -182,10 +183,13 @@ defmodule ExPool.Manager do
   defp handle_process_down({:ok, {:worker, worker}}, state) do
     {new_worker, state} = state
                         |> State.remove_monitor({:worker, worker})
+                        |> State.report_dead_worker
                         |> State.create_worker
 
     ref = Process.monitor(new_worker)
-    state |> State.add_monitor({:worker, new_worker}, ref)
+    state
+    |> State.add_monitor({:worker, new_worker}, ref)
+    |> State.return_worker(new_worker)
   end
   defp handle_process_down({:ok, {:in_use, worker}}, state) do
     state

@@ -18,15 +18,29 @@ defmodule ExPool.StateTest do
     {:ok, %{state: state}}
   end
 
-  test "stash", %{state: state} do
+  test "config", %{state: state} do
     assert 2 = State.size(state)
+  end
 
-    assert {_worker, state}       = State.create_worker(state)
-    assert {:ok, {worker, state}} = State.get_worker(state)
-    assert 0                      = State.available_workers(state)
+  test "factory", %{state: state} do
+    {worker_1, state} = State.create_worker(state)
+    {worker_2, state} = State.create_worker(state)
+    assert State.total_workers(state) == 2
+
+    Agent.stop(worker_1)
+    state = State.report_dead_worker(state)
+    state = State.destroy_worker(state, worker_2)
+    assert State.total_workers(state) == 0
+  end
+
+  test "stash", %{state: state} do
+    {:ok, worker} = TestWorker.start_link
 
     state = State.return_worker(state, worker)
     assert 1 = State.available_workers(state)
+
+    assert {:ok, {_worker, state}} = State.get_worker(state)
+    assert 0 = State.available_workers(state)
   end
 
   test "monitors", %{state: state} do
