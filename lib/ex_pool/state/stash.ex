@@ -9,7 +9,7 @@ defmodule ExPool.State.Stash do
 
     * `sup` - simple_one_for_one supervisor to start and supervise workers
     * `workers` - list of available workers
-    * `size` - total number of workers
+    * `total` - total number of workers
 
   """
 
@@ -17,19 +17,17 @@ defmodule ExPool.State.Stash do
 
   @type sup     :: pid
   @type workers :: [worker]
-  @type size    :: non_neg_integer
+  @type total   :: non_neg_integer
 
   @type t :: %__MODULE__{
     sup:     sup,
     workers: workers,
-    size:    size
+    total:   total
   }
 
   defstruct sup:     nil,
             workers: [],
-            size:    0
-
-  @default_size 5
+            total:   0
 
   alias ExPool.State.Stash
   alias ExPool.State.Stash.Supervisor, as: StashSupervisor
@@ -40,17 +38,14 @@ defmodule ExPool.State.Stash do
   ## Configuration options
 
     * `:worker_mod` - (Required) worker module that fits on a supervision tree
-    * `:size` - (Optional) number of workers on the pool (default 5).
 
   """
-  @spec new(config :: [Keyword]) :: t
-  def new(config) do
-    worker_mod = Keyword.fetch!(config, :worker_mod)
-    size       = Keyword.get(config, :size, @default_size)
-
+  @spec new(opts :: [Keyword]) :: t
+  def new(opts) do
+    worker_mod = Keyword.fetch!(opts, :worker_mod)
     {:ok, sup} = StashSupervisor.start_link(worker_mod)
 
-    %Stash{sup: sup, size: size}
+    %Stash{sup: sup}
   end
 
   @doc """
