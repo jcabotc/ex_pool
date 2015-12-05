@@ -9,7 +9,6 @@ defmodule ExPool.State.Stash do
 
     * `sup` - simple_one_for_one supervisor to start and supervise workers
     * `workers` - list of available workers
-    * `total` - total number of workers
 
   """
 
@@ -17,20 +16,17 @@ defmodule ExPool.State.Stash do
 
   @type sup     :: pid
   @type workers :: [worker]
-  @type total   :: non_neg_integer
 
   @type t :: %__MODULE__{
     sup:     sup,
     workers: workers,
-    total:   total
   }
 
   defstruct sup:     nil,
-            workers: [],
-            total:   0
+            workers: []
 
   alias ExPool.State.Stash
-  alias ExPool.State.Stash.Supervisor, as: StashSupervisor
+  alias ExPool.State.Factory.Supervisor, as: StashSupervisor
 
   @doc """
   Builds a new Stash struct with the given configuration.

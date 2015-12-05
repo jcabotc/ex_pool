@@ -1,6 +1,6 @@
-defmodule ExPool.State.Stash.Supervisor do
+defmodule ExPool.State.Factory.Supervisor do
   @moduledoc """
-  Supervisor the pool workers.
+  Supervisor of the workers.
   """
 
   use Supervisor
@@ -22,6 +22,14 @@ defmodule ExPool.State.Stash.Supervisor do
   @spec start_child(supervisor :: pid) :: Supervisor.on_start_child
   def start_child(sup) do
     Supervisor.start_child(sup, [])
+  end
+
+  @doc """
+  Stops a worker
+  """
+  @spec stop_child(supervisor :: pid, worker :: pid) :: Supervisor.on_start_child
+  def stop_child(sup, worker) do
+    Supervisor.terminate_child(sup, worker)
   end
 
   @doc false
