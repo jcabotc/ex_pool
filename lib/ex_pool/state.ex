@@ -15,9 +15,12 @@ defmodule ExPool.State do
 
   alias ExPool.State
 
+  alias ExPool.State.Config
   alias ExPool.State.Stash
   alias ExPool.State.Monitors
   alias ExPool.State.Queue
+
+  @type config :: Config.t
 
   @type stash  :: Stash.t
   @type worker :: Stash.worker
@@ -29,12 +32,14 @@ defmodule ExPool.State do
   @type queue :: Queue.t
 
   @type t :: %__MODULE__{
+    config:   config,
     stash:    stash,
     monitors: monitors,
     queue:    queue
   }
 
-  defstruct stash:    nil,
+  defstruct config:   nil,
+            stash:    nil,
             monitors: nil,
             queue:    nil
 
@@ -49,13 +54,14 @@ defmodule ExPool.State do
     * `:size` - (Optional) The size of the pool (default 5).
 
   """
-  @spec new(config :: [Keyword]) :: t
-  def new(config) do
-    stash    = Stash.new(config)
-    monitors = Monitors.new(config)
-    queue    = Queue.new(config)
+  @spec new(opts :: [Keyword]) :: t
+  def new(opts) do
+    config   = Config.new(opts)
+    stash    = Stash.new(opts)
+    monitors = Monitors.new(opts)
+    queue    = Queue.new(opts)
 
-    %State{stash: stash, monitors: monitors, queue: queue}
+    %State{config: config, stash: stash, monitors: monitors, queue: queue}
   end
 
   ## Stash
@@ -64,7 +70,7 @@ defmodule ExPool.State do
   Returns the total number of workers.
   """
   @spec size(t) :: non_neg_integer
-  def size(%State{stash: stash}), do: stash.size
+  def size(%State{config: config}), do: config.size
 
   @doc """
   Returns the number of available workers.
