@@ -8,7 +8,7 @@ defmodule ExPool.Manager.Requester do
     end
   end
 
-  def check_out(state, worker, {pid, _ref}) do
+  defp check_out(state, worker, {pid, _ref}) do
     ref = Process.monitor(pid)
     new_state = state
                 |> State.add_monitor({:in_use, worker}, ref)
