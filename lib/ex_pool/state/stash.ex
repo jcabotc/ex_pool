@@ -12,21 +12,16 @@ defmodule ExPool.State.Stash do
 
   """
 
-  @type worker :: pid
-
-  @type sup     :: pid
+  @type worker  :: pid
   @type workers :: [worker]
 
   @type t :: %__MODULE__{
-    sup:     sup,
     workers: workers,
   }
 
-  defstruct sup:     nil,
-            workers: []
+  defstruct workers: []
 
   alias ExPool.State.Stash
-  alias ExPool.State.Factory.Supervisor, as: StashSupervisor
 
   @doc """
   Builds a new Stash struct with the given configuration.
@@ -37,28 +32,13 @@ defmodule ExPool.State.Stash do
 
   """
   @spec new(opts :: [Keyword]) :: t
-  def new(opts) do
-    worker_mod = Keyword.fetch!(opts, :worker_mod)
-    {:ok, sup} = StashSupervisor.start_link(worker_mod)
-
-    %Stash{sup: sup}
-  end
+  def new(_opts), do: %Stash{}
 
   @doc """
   Returns the number of available workers.
   """
   @spec available(t) :: non_neg_integer
   def available(%Stash{workers: workers}), do: length(workers)
-
-  @doc """
-  Creates a new worker.
-  """
-  @spec create_worker(t) :: {worker, t}
-  def create_worker(%Stash{sup: sup, workers: workers} = stash) do
-    {:ok, worker} = StashSupervisor.start_child(sup)
-
-    {worker, %{stash | workers: [worker|workers]}}
-  end
 
   @doc """
   Get a worker and remove it from the workers list.

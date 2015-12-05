@@ -8,25 +8,26 @@ defmodule ExPool.State.StashTest do
   end
 
   setup do
-    stash = Stash.new(worker_mod: TestWorker)
+    stash = Stash.new([])
 
     {:ok, %{stash: stash}}
   end
 
-  test "#create_worker, #available, #get, #put", %{stash: stash} do
-    {_worker, stash} = Stash.create_worker(stash)
-    {_worker, stash} = Stash.create_worker(stash)
+  test "#available, #get, #put", %{stash: stash} do
+    worker_1 = TestWorker.start_link
+    worker_2 = TestWorker.start_link
 
+    stash = Stash.return(stash, worker_1)
+    stash = Stash.return(stash, worker_2)
     assert 2 = Stash.available(stash)
 
     assert {:ok, {worker_1, stash}}  = Stash.get(stash)
     assert {:ok, {_worker_2, stash}} = Stash.get(stash)
     assert {:empty, ^stash}          = Stash.get(stash)
-
     assert 0 = Stash.available(stash)
 
     stash = Stash.return(stash, worker_1)
-
+    assert 1 = Stash.available(stash)
     assert {:ok, {^worker_1, _stash}} = Stash.get(stash)
   end
 end
