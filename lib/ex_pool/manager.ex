@@ -39,6 +39,8 @@ defmodule ExPool.Manager do
 
   alias ExPool.State
 
+  alias ExPool.Manager.Requester
+
   @doc """
   Create a new pool state with the given configuration.
   (See State.new/1 for more info about configuration options)
@@ -101,27 +103,8 @@ defmodule ExPool.Manager do
   be returned by check-in to identify the requester of the worker.
   """
   @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:empty, State.t}
-  def check_out(state, from) do
-    State.get_worker(state) |> handle_check_out(from)
-  end
-
-  defp handle_check_out({:ok, {worker, state}}, {pid, _ref}) do
-    ref = Process.monitor(pid)
-
-    new_state = state
-                |> State.add_monitor({:in_use, worker}, ref)
-
-    {:ok, {worker, new_state}}
-  end
-  defp handle_check_out({:empty, state}, {pid, _ref} = from) do
-    ref = Process.monitor(pid)
-
-    new_state = state
-                |> State.add_monitor({:waiting, pid}, ref)
-                |> State.enqueue(from)
-
-    {:waiting, new_state}
-  end
+  def check_out(state, from),
+    do: Requester.request(state, from)
 
   @doc """
   Check-in a worker from the pool.
