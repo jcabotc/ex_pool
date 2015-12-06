@@ -26,8 +26,10 @@ defmodule ExPool.Manager.Joiner do
   end
 
   defp stash(state, worker) do
-    {:ok, ref} = State.ref_from_item(state, {:in_use, worker})
-    Process.demonitor(ref)
+    case State.ref_from_item(state, {:in_use, worker}) do
+      {:ok, ref} -> Process.demonitor(ref)
+      :not_found -> nil
+    end
 
     state = state
             |> State.remove_monitor({:in_use, worker})

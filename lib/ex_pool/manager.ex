@@ -46,11 +46,16 @@ defmodule ExPool.Manager do
   (See State.new/1 for more info about configuration options)
   """
   @spec new(config :: [Keyword]) :: State.t
-  def new(config) do
-    config
-    |> State.new
-    |> prepopulate
-  end
+  def new(config),
+    do: State.new(config) |> prepopulate
+
+  # defp prepopulate(state) do
+  #   {workers, state} = Populator.populate(state)
+  #
+  #   Enum.reduce workers, state, fn (worker, state) ->
+  #     {:ok, state}
+  #   end
+  # end
 
   defp prepopulate(state) do
     prepopulate(state, State.size(state))
