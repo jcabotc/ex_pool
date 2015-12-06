@@ -4,7 +4,7 @@ defmodule ExPool.Manager.Joiner do
   def join(state, worker) do
     case Process.alive?(worker) do
       true  -> check_in(state, worker)
-      false -> {:dead_worker, state}
+      false -> clean_dead_worker(state, worker)
     end
   end
 
@@ -34,5 +34,12 @@ defmodule ExPool.Manager.Joiner do
             |> State.return_worker(worker)
 
     {:ok, state}
+  end
+
+  defp clean_dead_worker(state, worker) do
+    state = state
+            |> State.remove_monitor({:worker, worker})
+
+    {:dead_worker, state}
   end
 end

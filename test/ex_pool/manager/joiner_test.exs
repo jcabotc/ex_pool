@@ -21,9 +21,14 @@ defmodule ExPool.Manager.JoinerTest do
   end
 
   test "join/2 with a dead worker", %{worker: worker, state: state} do
+    ref = Process.monitor(worker)
+    state = State.add_monitor(state, {:worker, worker}, ref)
+
     Agent.stop(worker)
 
     assert {:dead_worker, ^state} = Joiner.join(state, worker)
+
+    assert :not_found = State.ref_from_item(state, {:worker, worker})
   end
 
   test "join/2 with a process waiting", %{worker: worker, state: state} do
