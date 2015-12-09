@@ -77,20 +77,7 @@ defmodule ExPool.Manager do
     }
   """
   @spec info(State.t) :: map
-  def info(state) do
-    %{
-      workers: workers_info(state),
-      waiting: State.queue_size(state)
-    }
-  end
-
-  defp workers_info(state) do
-    total  = State.size(state)
-    free   = State.available_workers(state)
-    in_use = total - free
-
-    %{total: total, in_use: in_use, free: free}
-  end
+  def info(state), do: Info.get(state)
 
   @doc """
   Check-out a worker from the pool.
