@@ -40,6 +40,7 @@ defmodule ExPool.Manager do
   alias ExPool.State
 
   alias ExPool.Manager.Populator
+  alias ExPool.Manager.Info
   alias ExPool.Manager.Joiner
   alias ExPool.Manager.Requester
   alias ExPool.Manager.DownHandler
