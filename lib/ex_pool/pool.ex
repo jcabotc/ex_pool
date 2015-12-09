@@ -93,26 +93,28 @@ defmodule ExPool.Pool do
 
   @doc false
   def handle_cast({:check_in, worker}, state) do
-    new_state = state
-                |> Manager.check_in(worker)
-                |> handle_check_in
+    state = state
+            |> Manager.check_in(worker)
+            |> handle_possible_checkout
 
-    {:noreply, new_state}
-  end
-
-  defp handle_check_in({:ok, state}) do
-    state
-  end
-
-  defp handle_check_in({:check_out, {from, worker, state}}) do
-    GenServer.reply(from, worker)
-    state
+    {:noreply, state}
   end
 
   @doc false
   def handle_info({:DOWN, ref, :process, _obj, _reason}, state) do
-    {:ok, state} = Manager.process_down(state, ref)
+    state = state
+            |> Manager.process_down(ref)
+            |> handle_possible_checkout
 
     {:noreply, state}
+  end
+
+  defp handle_possible_checkout({:check_out, {from, worker, state}}) do
+    GenServer.reply(from, worker)
+    state
+  end
+
+  defp handle_possible_checkout({:ok, state}) do
+    state
   end
 end
