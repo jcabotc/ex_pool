@@ -39,7 +39,10 @@ defmodule ExPool.Manager do
 
   alias ExPool.State
 
+  alias ExPool.Manager.Populator
+  alias ExPool.Manager.Joiner
   alias ExPool.Manager.Requester
+  alias ExPool.Manager.DownHandler
 
   @doc """
   Create a new pool state with the given configuration.
@@ -49,25 +52,13 @@ defmodule ExPool.Manager do
   def new(config),
     do: State.new(config) |> prepopulate
 
-  # defp prepopulate(state) do
-  #   {workers, state} = Populator.populate(state)
-  #
-  #   Enum.reduce workers, state, fn (worker, state) ->
-  #     {:ok, state}
-  #   end
-  # end
-
   defp prepopulate(state) do
-    prepopulate(state, State.size(state))
-  end
+    {workers, state} = Populator.populate(state)
 
-  defp prepopulate(state, 0), do: state
-  defp prepopulate(state, remaining) do
-    {worker, state} = State.create_worker(state)
-    state           = State.return_worker(state, worker)
-    ref             = Process.monitor(worker)
-
-    state |> State.add_monitor({:worker, worker}, ref) |> prepopulate(remaining - 1)
+    Enum.reduce workers, state, fn (worker, state) ->
+      {:ok, state} = check_in(state, worker)
+      state
+    end
   end
 
   @doc """
@@ -107,7 +98,7 @@ defmodule ExPool.Manager do
   request. In case there are no workers available, the same term will
   be returned by check-in to identify the requester of the worker.
   """
-  @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:empty, State.t}
+  @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:waiting, State.t}
   def check_out(state, from),
     do: Requester.request(state, from)
 
@@ -128,27 +119,11 @@ defmodule ExPool.Manager do
   @spec check_in(State.t, pid) ::
     {:ok, State.t} | {:check_out, {from :: any, worker :: pid, State.t}}
   def check_in(state, worker) do
-    State.pop_from_queue(state) |> handle_check_in(worker)
-  end
-
-  def handle_check_in({:ok, {{pid, _} = from, state}}, worker) do
-    {:ok, ref} = State.ref_from_item(state, {:waiting, pid})
-
-    new_state = state
-                |> State.remove_monitor({:waiting, pid})
-                |> State.add_monitor({:in_use, worker}, ref)
-
-    {:check_out, {from, worker, new_state}}
-  end
-  def handle_check_in({:empty, state}, worker) do
-    {:ok, ref} = State.ref_from_item(state, {:in_use, worker})
-    Process.demonitor(ref)
-
-    new_state = state
-                |> State.remove_monitor({:in_use, worker})
-                |> State.return_worker(worker)
-
-    {:ok, new_state}
+    case Joiner.join(state, worker) do
+      {:dead_worker, state}               -> handle_dead_worker(state)
+      {:check_out, {from, worker, state}} -> {:check_out, {from, worker, state}}
+      {:ok, state}                        -> {:ok, state}
+    end
   end
 
   @doc """
@@ -165,33 +140,16 @@ defmodule ExPool.Manager do
   """
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
-    State.item_from_ref(state, ref) |> handle_process_down(state)
+    case DownHandler.process_down(state, ref) do
+      {:dead_worker, state}        -> handle_dead_worker(state)
+      {:check_in, {worker, state}} -> check_in(state, worker)
+      {:ok, state}                 -> {:ok, state}
+    end
   end
 
-  defp handle_process_down({:ok, {:worker, worker}}, state) do
-    {new_worker, state} = state
-                        |> State.remove_monitor({:worker, worker})
-                        |> State.report_dead_worker
-                        |> State.create_worker
+  defp handle_dead_worker(state) do
+    {worker, state} = Populator.add(state)
 
-    ref = Process.monitor(new_worker)
-    state
-    |> State.add_monitor({:worker, new_worker}, ref)
-    |> State.return_worker(new_worker)
-  end
-  defp handle_process_down({:ok, {:in_use, worker}}, state) do
-    state
-    |> State.remove_monitor({:in_use, worker})
-    |> State.return_worker(worker)
-  end
-  defp handle_process_down({:ok, {:waiting, pid}}, state) do
-    state
-    |> State.remove_monitor({:waiting, pid})
-    |> State.keep_on_queue fn {waiting_pid, _ref} ->
-         waiting_pid != pid
-       end
-  end
-  defp handle_process_down(:not_found, state) do
-    state
+    check_in(state, worker)
   end
 end

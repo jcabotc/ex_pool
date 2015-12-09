@@ -38,7 +38,7 @@ defmodule ExPool.ManagerTest do
     Agent.stop(worker_1)
 
     assert_receive {:DOWN, ref, :process, _, _}
-    state = Manager.process_down(state, ref)
+    {:ok, state} = Manager.process_down(state, ref)
 
     assert {:ok, {worker_2, state}} = Manager.check_out(state, {pid_2, :ref_2})
     assert Process.alive?(worker_2)
@@ -53,7 +53,7 @@ defmodule ExPool.ManagerTest do
     Agent.stop(pid_1)
     assert_receive {:DOWN, ref, :process, _, _}
 
-    state = Manager.process_down(state, ref)
+    {:ok, state} = Manager.process_down(state, ref)
 
     assert {:ok, {_worker_2, _state}} = Manager.check_out(state, {pid_2, :ref_2})
   end
@@ -67,7 +67,7 @@ defmodule ExPool.ManagerTest do
     Agent.stop(pid_2)
     assert_receive {:DOWN, ref, :process, _, _}
 
-    state = Manager.process_down(state, ref)
+    {:ok, state} = Manager.process_down(state, ref)
     assert {:waiting, state} = Manager.check_out(state, {pid_3, :ref_3})
 
     assert {:check_out, {{^pid_3, :ref_3}, ^worker_1, _state}} = Manager.check_in(state, worker_1)
