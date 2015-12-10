@@ -39,6 +39,13 @@ defmodule ExPool.Manager.Joiner do
   end
 
   defp clean_dead_worker(state, worker) do
+    case State.ref_from_item(state, {:worker, worker}) do
+      {:ok, _ref} -> demonitor_and_respond(state, worker)
+      :not_found  -> {:ok, state}
+    end
+  end
+
+  defp demonitor_and_respond(state, worker) do
     state = state
             |> State.remove_monitor({:worker, worker})
 

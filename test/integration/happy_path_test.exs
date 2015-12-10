@@ -39,5 +39,8 @@ defmodule ExPool.Integration.HappyPathTest do
     for time <- @work_times do
       assert_receive {:work_done, ^time}
     end
+
+    expected_info = %{workers: %{total: 3, free: 3, in_use: 0}, waiting: 0}
+    assert ExPool.info(pool) == expected_info
   end
 end

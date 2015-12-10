@@ -17,6 +17,7 @@ defmodule ExPool.Manager.DownHandler do
     end
 
     state = state
+            |> State.report_dead_worker
             |> State.remove_monitor({:in_use, worker})
             |> State.remove_monitor({:worker, worker})
 

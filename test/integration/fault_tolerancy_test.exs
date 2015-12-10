@@ -48,5 +48,9 @@ defmodule ExPool.Integration.FaultTolerancyTest do
     for step <- [1,2,5,7,10] do
       assert_receive {:done, ^step}
     end
+
+    :timer.sleep(20)
+    expected_info = %{workers: %{total: 3, free: 3, in_use: 0}, waiting: 0}
+    assert ExPool.info(pool) == expected_info
   end
 end
