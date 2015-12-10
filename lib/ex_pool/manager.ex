@@ -37,37 +37,47 @@ defmodule ExPool.Manager do
   ```
   """
 
-  alias ExPool.Pool.State
+  alias ExPool.State
 
-  alias ExPool.Manager.Workers
-  alias ExPool.Manager.Waiting
-  alias ExPool.Manager.Monitors
+  alias ExPool.Manager.Populator
+  alias ExPool.Manager.Info
+  alias ExPool.Manager.Joiner
+  alias ExPool.Manager.Requester
+  alias ExPool.Manager.DownHandler
 
   @doc """
   Create a new pool state with the given configuration.
   (See State.new/1 for more info about configuration options)
   """
   @spec new(config :: [Keyword]) :: State.t
-  def new(config) do
-    config
-    |> State.new
-    |> Workers.setup
-    |> Waiting.setup
-    |> Monitors.setup
-    |> prepopulate
+  def new(config),
+    do: State.new(config) |> prepopulate
+
+  defp prepopulate(state) do
+    {workers, state} = Populator.populate(state)
+
+    Enum.reduce workers, state, fn (worker, state) ->
+      {:ok, state} = check_in(state, worker)
+      state
+    end
   end
 
-  defp prepopulate(%{size: size} = state) do
-    prepopulate(state, size)
-  end
+  @doc """
+  Gathers information about the current state of the pool.
 
-  defp prepopulate(state, 0), do: state
-  defp prepopulate(state, remaining) do
-    {worker, state} = Workers.create(state)
-    ref             = Process.monitor(worker)
+  ## Format:
 
-    state |> Monitors.add({:worker, worker}, ref) |> prepopulate(remaining - 1)
-  end
+    %{
+      workers: %{
+        free: <number_of_available_workers>,
+        in_use: <number_of_workers_in_use>,
+        total: <total_number_of_workers>
+      },
+      waiting: <number_of_processes_waiting_for_an_available_worker>
+    }
+  """
+  @spec info(State.t) :: map
+  def info(state), do: Info.get(state)
 
   @doc """
   Check-out a worker from the pool.
@@ -76,28 +86,9 @@ defmodule ExPool.Manager do
   request. In case there are no workers available, the same term will
   be returned by check-in to identify the requester of the worker.
   """
-  @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:empty, State.t}
-  def check_out(state, from) do
-    Workers.get(state) |> handle_check_out(from)
-  end
-
-  defp handle_check_out({:ok, {worker, state}}, {pid, _ref}) do
-    ref = Process.monitor(pid)
-
-    new_state = state
-                |> Monitors.add({:in_use, worker}, ref)
-
-    {:ok, {worker, new_state}}
-  end
-  defp handle_check_out({:empty, state}, {pid, _ref} = from) do
-    ref = Process.monitor(pid)
-
-    new_state = state
-                |> Monitors.add({:waiting, pid}, ref)
-                |> Waiting.push(from)
-
-    {:waiting, new_state}
-  end
+  @spec check_out(State.t, from :: any) :: {:ok, {pid, State.t}} | {:waiting, State.t}
+  def check_out(state, from),
+    do: Requester.request(state, from)
 
   @doc """
   Check-in a worker from the pool.
@@ -116,27 +107,11 @@ defmodule ExPool.Manager do
   @spec check_in(State.t, pid) ::
     {:ok, State.t} | {:check_out, {from :: any, worker :: pid, State.t}}
   def check_in(state, worker) do
-    Waiting.pop(state) |> handle_check_in(worker)
-  end
-
-  def handle_check_in({:ok, {{pid, _} = from, state}}, worker) do
-    {:ok, ref} = Monitors.ref_from_item(state, {:waiting, pid})
-
-    new_state = state
-                |> Monitors.forget({:waiting, pid})
-                |> Monitors.add({:in_use, worker}, ref)
-
-    {:check_out, {from, worker, new_state}}
-  end
-  def handle_check_in({:empty, state}, worker) do
-    {:ok, ref} = Monitors.ref_from_item(state, {:in_use, worker})
-    Process.demonitor(ref)
-
-    new_state = state
-                |> Monitors.forget({:in_use, worker})
-                |> Workers.put(worker)
-
-    {:ok, new_state}
+    case Joiner.join(state, worker) do
+      {:dead_worker, state}               -> handle_dead_worker(state)
+      {:check_out, {from, worker, state}} -> {:check_out, {from, worker, state}}
+      {:ok, state}                        -> {:ok, state}
+    end
   end
 
   @doc """
@@ -153,30 +128,16 @@ defmodule ExPool.Manager do
   """
   @spec process_down(State.t, reference) :: any
   def process_down(state, ref) do
-    Monitors.item_from_ref(state, ref) |> handle_process_down(state)
+    case DownHandler.process_down(state, ref) do
+      {:dead_worker, state}        -> handle_dead_worker(state)
+      {:check_in, {worker, state}} -> check_in(state, worker)
+      {:ok, state}                 -> {:ok, state}
+    end
   end
 
-  defp handle_process_down({:ok, {:worker, worker}}, state) do
-    {new_worker, state} = state
-                        |> Monitors.forget({:worker, worker})
-                        |> Workers.create
+  defp handle_dead_worker(state) do
+    {worker, state} = Populator.add(state)
 
-    ref = Process.monitor(new_worker)
-    state |> Monitors.add({:worker, new_worker}, ref)
-  end
-  defp handle_process_down({:ok, {:in_use, worker}}, state) do
-    state
-    |> Monitors.forget({:in_use, worker})
-    |> Workers.put(worker)
-  end
-  defp handle_process_down({:ok, {:waiting, pid}}, state) do
-    state
-    |> Monitors.forget({:waiting, pid})
-    |> Waiting.keep fn {waiting_pid, _ref} ->
-         waiting_pid != pid
-       end
-  end
-  defp handle_process_down(:not_found, state) do
-    state
+    check_in(state, worker)
   end
 end

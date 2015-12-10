@@ -20,9 +20,9 @@ defmodule ExPool.Pool do
   ```
   """
 
-  alias ExPool.Manager
-
   use GenServer
+
+  alias ExPool.Manager
 
   @doc """
   Starts a new pool GenServer.
@@ -41,6 +41,14 @@ defmodule ExPool.Pool do
     name_opts = Keyword.take(opts, [:name])
 
     GenServer.start_link(__MODULE__, opts, name_opts)
+  end
+
+  @doc """
+  Get information about the current state of the pool.
+  """
+  @spec info(pool :: pid) :: map
+  def info(pool) do
+    GenServer.call(pool, :info)
   end
 
   @doc """
@@ -77,26 +85,36 @@ defmodule ExPool.Pool do
   end
 
   @doc false
-  def handle_cast({:check_in, worker}, state) do
-    new_state = state
-                |> Manager.check_in(worker)
-                |> handle_check_in
+  def handle_call(:info, _from, state) do
+    info = Manager.info(state)
 
-    {:noreply, new_state}
+    {:reply, info, state}
   end
 
   @doc false
-  def handle_info({:DOWN, ref, :process, _obj, _reason}, state) do
-    state = Manager.process_down(state, ref)
+  def handle_cast({:check_in, worker}, state) do
+    state = state
+            |> Manager.check_in(worker)
+            |> handle_possible_checkout
 
     {:noreply, state}
   end
 
-  defp handle_check_in({:ok, state}) do
+  @doc false
+  def handle_info({:DOWN, ref, :process, _obj, _reason}, state) do
+    state = state
+            |> Manager.process_down(ref)
+            |> handle_possible_checkout
+
+    {:noreply, state}
+  end
+
+  defp handle_possible_checkout({:check_out, {from, worker, state}}) do
+    GenServer.reply(from, worker)
     state
   end
-  defp handle_check_in({:check_out, {from, worker, state}}) do
-    GenServer.reply(from, worker)
+
+  defp handle_possible_checkout({:ok, state}) do
     state
   end
 end
